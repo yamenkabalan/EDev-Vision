@@ -1,4 +1,5 @@
-export const DATA_URL = 'https://asadgnc.github.io/edev-data/data';
+/** Published data feed. NEXT_PUBLIC_DATA_URL points a local preview at a local copy of edev-data/data. */
+export const DATA_URL = process.env.NEXT_PUBLIC_DATA_URL?.replace(/\/$/, '') || 'https://asadgnc.github.io/edev-data/data';
 export type Gap = [string, string];
 export type Observation = { date: string; open_water_km2: number | null; flooded_veg_km2: number | null; flooded_km2: number | null; valid_km2: number | null; quality: string | null; granule: string | null };
 export type Metric = 'open_water_km2' | 'flooded_veg_km2';
@@ -49,6 +50,9 @@ export async function loadFeed(signal?: AbortSignal): Promise<Feed> {
 const boundsCache = new Map<string, Promise<Bounds>>();
 export async function loadBounds(date: string, signal?: AbortSignal) { if (!validDate(date)) throw new Error('Invalid acquisition date.'); const cached=boundsCache.get(date); if(cached)return cached; const request=getJSON(`${DATA_URL}/${date}/bounds.json`, signal).then(raw=>parseBounds(raw,date)); if(!signal){boundsCache.set(date,request);request.catch(()=>boundsCache.delete(date));} return request; }
 export async function loadHistoryBounds(year: string, signal?: AbortSignal) { if(!/^\d{4}$/.test(year))throw new Error('Invalid historical year.'); const raw=object(await getJSON(`${DATA_URL}/history/bounds.json`,signal)); return parseBounds({...raw,date:year},year); }
+/** Projection maps share one footprint; the key is "<year>_<scenario>", e.g. "2028_expected". */
+export const FUTURE_KEY = /^\d{4}_(expected|dry|wet)$/;
+export async function loadFutureBounds(key: string, signal?: AbortSignal) { if(!FUTURE_KEY.test(key))throw new Error('Invalid projection map.'); const raw=object(await getJSON(`${DATA_URL}/future/bounds.json`,signal)); return parseBounds({...raw,date:key},key); }
 export const inGap = (date: string, gaps: Gap[]) => gaps.some(([a,b]) => date >= a && date <= b);
 export function segments(rows: Observation[], key: Metric, gaps: Gap[]): Observation[][] {
   const result: Observation[][] = []; let part: Observation[] = [];

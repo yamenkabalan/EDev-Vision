@@ -51,3 +51,6 @@ export function useAssistant() {
 
   return { messages, busy, ask };
 }
+
+/** One conversation shared by every chat surface on the page. */
+export type AssistantChat = ReturnType<typeof useAssistant>;

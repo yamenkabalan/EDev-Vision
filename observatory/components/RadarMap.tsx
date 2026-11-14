@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { DATA_URL, formatDate, loadBounds, loadHistoryBounds } from '@/lib/data';
+import { DATA_URL, formatDate, loadBounds, loadFutureBounds, loadHistoryBounds } from '@/lib/data';
 export type MapPhase = 'loading' | 'ready' | 'error';
-type Props = { dates: string[]; layer?: 'class'|'hh'|'rgb'; source?:'nisar'|'history'; opacity?: number; onPhase?: (phase:MapPhase)=>void; };
+type Props = { dates: string[]; layer?: 'class'|'hh'|'rgb'; source?:'nisar'|'history'|'future'; opacity?: number; onPhase?: (phase:MapPhase)=>void; };
 /*
   Fades the edge of a full radar image (colour or HH) into the basemap instead of ending in a hard
   line. A small blurred copy of the image's own alpha becomes a CSS mask, so it follows the real
@@ -28,7 +28,7 @@ function softenEdge(img:HTMLImageElement|undefined){
 export default function RadarMap({dates,layer='class',source='nisar',opacity=.95,onPhase}:Props) {
   const host=useRef<HTMLDivElement>(null), map=useRef<L.Map|null>(null), overlays=useRef<L.ImageOverlay[]>([]), fitted=useRef(false);
   const split=useRef(50); const [divider,setDivider]=useState(50), [phase,setPhase]=useState<MapPhase>('loading'), [error,setError]=useState(''), [retry,setRetry]=useState(0),[tileError,setTileError]=useState(false),[showing,setShowing]=useState(false);
-  const dateKey=dates.join('|'); const isCompare=dates.length===2; const label=(d:string)=>source==='history'?d:formatDate(d,true);
+  const dateKey=dates.join('|'); const isCompare=dates.length===2; const label=(d:string)=>source==='history'?d:source==='future'?d.replace('_',' · '):formatDate(d,true);
   const phaseRef=useRef(onPhase); useEffect(()=>{phaseRef.current=onPhase;},[onPhase]);
   const opacityRef=useRef(opacity); opacityRef.current=opacity;
   function clip(){if(!host.current)return;const cr=host.current.getBoundingClientRect(),cut=cr.left+cr.width*split.current/100;overlays.current.forEach((o,i)=>{const el=o.getElement();if(!el)return;if(overlays.current.length!==2){el.style.clipPath='none';return;}const er=el.getBoundingClientRect();el.style.clipPath=i===0?`inset(0 ${Math.max(0,Math.min(er.width,er.right-cut))}px 0 0)`:`inset(0 0 0 ${Math.max(0,Math.min(er.width,cut-er.left))}px)`;});}
@@ -50,16 +50,16 @@ export default function RadarMap({dates,layer='class',source='nisar',opacity=.95
     async function run(){
       try{
         const selected=dateKey.split('|');
-        const infos=await Promise.all(selected.map(d=>source==='history'?loadHistoryBounds(d,controller.signal):loadBounds(d,controller.signal)));if(!current)return;
+        const infos=await Promise.all(selected.map(d=>source==='history'?loadHistoryBounds(d,controller.signal):source==='future'?loadFutureBounds(d,controller.signal):loadBounds(d,controller.signal)));if(!current)return;
         const combined=L.latLngBounds(infos[0].bounds);infos.slice(1).forEach(b=>combined.extend(b.bounds));
         if(!fitted.current){m!.fitBounds(combined,{padding:[15,15],maxZoom:11,animate:false});fitted.current=true;}
         const soft=source==='nisar'&&(layer==='rgb'||layer==='hh');
         const loaded=infos.map((info,i)=>new Promise<void>((resolve,reject)=>{
-          const url=source==='history'?`${DATA_URL}/history/${selected[i]}.webp`:`${DATA_URL}/${selected[i]}/${layer==='class'?'class':layer==='hh'?'hh':'rgb'}.webp`;
+          const url=source==='history'?`${DATA_URL}/history/${selected[i]}.webp`:source==='future'?`${DATA_URL}/future/${selected[i]}.webp`:`${DATA_URL}/${selected[i]}/${layer==='class'?'class':layer==='hh'?'hh':'rgb'}.webp`;
           const o=L.imageOverlay(url,info.bounds,{opacity:0,interactive:false,crossOrigin:'anonymous',zIndex:300+i,className:source==='nisar'&&layer==='rgb'?'radar-soft':''});layers.push(o);
           const timer=setTimeout(()=>reject(new Error('The raster request timed out.')),25000);timers.push(timer);
           o.once('load',()=>{clearTimeout(timer);if(current){if(soft)softenEdge(o.getElement());resolve();}});
-          o.once('error',()=>{clearTimeout(timer);reject(new Error(`The ${source==='history'?'historical':layer==='hh'?'HH radar':layer==='rgb'?'radar colour':'classification'} layer for ${label(selected[i])} is unavailable.`));});o.addTo(m!);
+          o.once('error',()=>{clearTimeout(timer);reject(new Error(`The ${source==='future'?'projection':source==='history'?'historical':layer==='hh'?'HH radar':layer==='rgb'?'radar colour':'classification'} layer for ${label(selected[i])} is unavailable.`));});o.addTo(m!);
         }));
         await Promise.all(loaded);if(!current)return;
         overlays.current.forEach(o=>o.remove());overlays.current=layers;layers.forEach(o=>o.setOpacity(opacityRef.current));
@@ -75,7 +75,7 @@ export default function RadarMap({dates,layer='class',source='nisar',opacity=.95
   useEffect(()=>{split.current=divider;clip();},[divider]);
   function drag(e:React.PointerEvent<HTMLButtonElement>){if(!host.current)return;const r=host.current.getBoundingClientRect();setDivider(Math.max(2,Math.min(98,(e.clientX-r.left)/r.width*100)));}
   return <div className={`radar-frame ${isCompare?'comparison-frame':''}`}>
-    <div ref={host} className="radar-map" role="region" aria-label={isCompare?'Geographically aligned two-date radar comparison':'NISAR observation map'} />
+    <div ref={host} className="radar-map" role="region" aria-label={isCompare?'Geographically aligned two-date radar comparison':source==='future'?'Projected open-water probability map':'NISAR observation map'} />
     <div className="map-coordinates">OKAVANGO DELTA <span>BOTSWANA</span></div>
     <button className="map-reset" aria-label="Reset map to the observation footprint" onClick={()=>{if(overlays.current.length)map.current?.fitBounds(overlays.current[0].getBounds(),{padding:[15,15],animate:false});}}>⌖ <span>Reset view</span></button>
     {isCompare&&<><div className="compare-date left">A <strong>{label(dates[0])}</strong></div><div className="compare-date right">B <strong>{label(dates[1])}</strong></div><div className="swipe-line" style={{left:`${divider}%`}}><button className="swipe-handle" aria-label="Drag comparison divider" onPointerDown={e=>{e.stopPropagation();e.currentTarget.setPointerCapture(e.pointerId);drag(e);}} onPointerMove={e=>{if(e.currentTarget.hasPointerCapture(e.pointerId))drag(e);}} onPointerUp={e=>e.currentTarget.releasePointerCapture(e.pointerId)} onKeyDown={e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();setDivider(p=>Math.max(2,Math.min(98,p+(e.key==='ArrowRight'?2:-2))));}}}>‹<span/>›</button></div></>}

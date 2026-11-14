@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { useAssistant, type ChatContext } from '@/lib/assistant';
+import type { AssistantChat, ChatContext } from '@/lib/assistant';
 import { COPY } from '@/lib/copy';
 
 /*
@@ -26,10 +26,12 @@ type Props = {
   /** Selection sent with every question; the server builds the data context from it. */
   context?: ChatContext;
   contextLabel?: string;
+  /** The page-wide conversation (see useAssistant in Experience). */
+  chat: AssistantChat;
 };
 
-export default function AskWindow({ open, summon, onClose, prefill, context, contextLabel }: Props) {
-  const { messages, busy, ask } = useAssistant();
+export default function AskWindow({ open, summon, onClose, prefill, context, contextLabel, chat }: Props) {
+  const { messages, busy, ask } = chat;
   const [mode, setMode] = useState<Mode>('small');
   const [question, setQuestion] = useState('');
   const log = useRef<HTMLDivElement>(null);

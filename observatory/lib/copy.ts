@@ -73,12 +73,12 @@ export const COPY = {
         ],
       },
       nasa: {
-        label: 'NISAR radar image',
+        label: 'NASA radar image',
         what: "NASA's own colour rendering of the same NISAR radar data",
         best: 'Best for checking our processing against NASA’s',
         more: [
-          'NASA publishes these images from 13 August 2026 onwards, so the first three radar dates have none.',
-          'Some tiles can be empty.',
+          'NASA renders each NISAR acquisition itself, so its colours and coverage can differ from ours.',
+          'On some dates NASA covers only part of our area, and some tiles can be empty.',
         ],
         tech: [
           'NISAR L2 GCOV browse imagery via NASA GIBS (live tiles, up to map zoom 13).',
@@ -114,7 +114,7 @@ export const COPY = {
       hh: {
         label: 'Raw radar (HH)',
         what: 'The HH radar band before our speckle filter, in grey: dark is smooth water, bright is flooded vegetation or trees',
-        best: 'Best for experts checking the raw signal',
+        best: 'Best for seeing the unfiltered signal behind the water map',
         more: [
           'This is the image the water map is built from, before cleaning.',
           'The grain you see is speckle, a normal property of radar images.',

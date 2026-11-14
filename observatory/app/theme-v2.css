@@ -241,3 +241,11 @@
   .v2-ask-fab,.v2-ask-fab[data-visible="false"],.v2-ask-fab:hover{transition:none;transform:none}
   .v2-menu-panel{animation:none}
 }
+
+/* ---- Map comfort: softer radar colours, no white flashes, quiet loading ---- */
+/* The NISAR colour composite is very saturated next to the dark basemap; tone it down slightly. Hues (blue / red / green) keep their meaning. */
+.radar-soft{filter:saturate(.75) brightness(.92)}
+/* Shown while the next date loads over the current one (instead of covering the whole map). */
+.map-loading-chip{position:absolute;z-index:430;left:50%;top:18px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:#071711d9;color:#cfe0c8;border:1px solid #b3cd9633;border-radius:20px;padding:6px 12px;font-size:11px;white-space:nowrap;pointer-events:none}
+.map-loading-chip .loading-orbit{width:12px;height:12px}
+@media(max-width:720px){.map-loading-chip{top:auto;bottom:14px;font-size:10px}}

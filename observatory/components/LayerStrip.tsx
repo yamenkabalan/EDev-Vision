@@ -12,8 +12,6 @@ import type { LegendItem } from '@/lib/data';
 */
 export const PRIMARY_LAYERS: LayerId[] = ['class', 'rgb', 'viirs'];
 export const MORE_LAYERS: LayerId[] = ['nasa', 'dswx', 'history', 'hh'];
-/** NASA's NISAR tiles start here (same rule as ReferenceMap). */
-export const NASA_NISAR_FIRST_DATE = '2026-08-13';
 const L = COPY.layers;
 
 type Props = {

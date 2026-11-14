@@ -1,0 +1,13 @@
+'use client';
+import { useEffect, useMemo, useState } from 'react';
+import { DATA_URL, formatArea } from '@/lib/data';
+type Year = { year:number; water_km2:number; low_coverage:boolean };
+type History = { source:string; reliable_since:number; years:Year[] };
+export default function HistoricalGauge(){
+  const [history,setHistory]=useState<History|null>(null),[year,setYear]=useState(2025),[error,setError]=useState(false);
+  useEffect(()=>{const controller=new AbortController();fetch(`${DATA_URL}/history.json`,{signal:controller.signal}).then(r=>{if(!r.ok)throw Error('History unavailable');return r.json();}).then((h:History)=>{if(!Array.isArray(h.years))throw Error('Invalid history');setHistory(h);const latest=h.years.filter(v=>v.year>=h.reliable_since&&!v.low_coverage).at(-1);if(latest)setYear(latest.year);}).catch(()=>{if(!controller.signal.aborted)setError(true)});return()=>controller.abort();},[]);
+  const eligible=useMemo(()=>history?.years.filter(v=>v.year>=history.reliable_since&&!v.low_coverage&&Number.isFinite(v.water_km2))||[],[history]);
+  const selected=eligible.find(v=>v.year===year),average=eligible.length?eligible.reduce((sum,v)=>sum+v.water_km2,0)/eligible.length:null;
+  const max=Math.max(1,...eligible.map(v=>v.water_km2),average||0)*1.08;
+  return <aside className="historical-gauge"><div className="eyebrow">ANNUAL OPEN WATER / LANDSAT</div><h3>Against the observed years.</h3><p>Annual areas for the study area. Colour marks above or below the reference average, not ecological health.</p>{history&&selected&&average!==null?<><label>Selected year <select aria-label="Historical open water year" value={year} onChange={e=>setYear(+e.target.value)}>{eligible.map(v=><option key={v.year} value={v.year}>{v.year}</option>)}</select></label><div className="gauge-pair"><div className="gauge-item"><div className="gauge-vessel"><div className={`gauge-fill ${selected.water_km2>=average?'above':'below'}`} style={{height:`${selected.water_km2/max*100}%`}}/></div><strong>{formatArea(selected.water_km2)}</strong><span>{year} observed</span></div><div className="gauge-item"><div className="gauge-vessel"><div className="gauge-fill reference" style={{height:`${average/max*100}%`}}/></div><strong>{formatArea(average)}</strong><span>{eligible[0]?.year}–{eligible.at(-1)?.year} mean</span></div></div><small>km² · annual open water<br/>{eligible.length} years with reliable coverage</small></>:<div className="gauge-loading">{error?'Historical data unavailable.':'Loading historical observations…'}</div>}<a href={`${DATA_URL}/history.json`} target="_blank" rel="noreferrer">Source: Digital Earth Africa WOfS ↗</a></aside>;
+}

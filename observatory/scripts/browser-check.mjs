@@ -44,7 +44,8 @@ try {
   await expect(page.locator('.main-map-container img.leaflet-image-layer')).toHaveAttribute('src',/2026-10-24\/class.webp/);
   await page.waitForTimeout(1100);
   await expect(page.locator('.main-map-container img.leaflet-image-layer')).toHaveCount(1);
-  await page.getByRole('button',{name:'Raw HH'}).click();
+  await page.getByRole('button',{name:/More layers/}).click();
+  await page.getByRole('menuitemradio',{name:/Raw radar \(HH\)/}).click();
   await expect(page.locator('.main-map-container .map-state')).toHaveCount(0,{timeout:30000});
   await expect(page.locator('.main-map-container img.leaflet-image-layer')).toHaveAttribute('src',/2026-10-24\/hh.webp/);
   results.push('Date/stats/quality synchronized, gap splits lines, rapid selection leaves only the latest layer, HH loads on demand.');

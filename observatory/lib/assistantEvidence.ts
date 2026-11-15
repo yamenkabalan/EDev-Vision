@@ -49,5 +49,7 @@ export function evidenceFor(turns: Turn[]) {
   return {
     names: keys.map(key => context.places[key as keyof typeof context.places].name),
     records: keys.map(key => ({ key, ...context.places[key as keyof typeof context.places] })),
+    oni_dec_feb: context.oni_dec_feb,
+    oni_latest: context.oni_latest,
   };
 }

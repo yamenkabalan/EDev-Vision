@@ -1,4 +1,19 @@
-# EDev Vision — Okavango Flood Pulse
+# RSynthesis AI — Estimate the future of life
+
+The whole site is about the world's inland surface water. There is no single focus area any more.
+
+- **02 Global water**: annual inland surface water for 266 countries and territories, 1984–2018, on a MapLibre globe; compare two countries and fit each one to the map with "See on map".
+- **03 All-in-one radar**: one globe with seven live layers (NISAR radar, OPERA DSWx-S1 radar water, OPERA DSWx-HLS optical water, VIIRS floods, GPM IMERG rain, VIIRS photo, JRC Landsat years). 12 daily layers are stacked per NISAR cycle (`lib/gibs.ts`).
+- **04 Compare**: any place at two years or two 12-day cycles, swipe divider (two synced MapLibre maps).
+- **05 History / 06 Graphics / 07 Future / 08 What should be done**: world, continent, country or two countries; the place choice is shared by every section (`components/PlacePicker.tsx`).
+- **RSynthesis world engine** (`lib/world.ts`): Bayesian model averaging over every combination of the chosen causes (rain, last year's rain, heat, El Niño, trend), with a Zellner g-prior and a Scott–Berger prior, a Student-t predictive and simulation to 2030. It runs in the browser on the reader's options.
+
+Data files, all committed and rebuilt by scripts:
+
+- `public/data/global-water.json`: EC JRC / UNEP SDG 6.6.1 country water (Yamen's file, `scripts/build-global-water.py`)
+- `public/data/world.json`: ERA5 rain and heat per country (Our World in Data), NOAA ONI, UNEP SDG 6.6.1 2000–2022 and continents (`python scripts/build-world-data.py`)
+- `public/data/engine-summary.json`: the engine tested on every country (`node --experimental-strip-types scripts/engine-summary.mts`)
+- `../../assistant-proxy/api/world-context.json`: what the AI assistant may say (`node --experimental-strip-types scripts/assistant-context.mts`)
 
 New, isolated Next.js App Router implementation. The original HTML frontend in the parent directory is preserved. The source brief is saved as `BUILD_BRIEF.md`.
 
@@ -51,6 +66,17 @@ The feed now includes Digital Earth Africa WOfS annual Landsat open-water histor
 
 The historical view now loads the published JRC Global Surface Water v1.5 occurrence image (`jrc/occurrence.webp`) with its geographic bounds and source statistics. It represents 1984–2024 optical open-water frequency, separate from the 2026 NISAR classes. The opening Earth uses a fixed camera distance after its entrance, so its displayed size does not drift during page load.
 
+## Global water explorer
+
+`components/GlobalExplorer.tsx` (section, country readouts, chart, sources) and `components/UnifiedGlobeMap.tsx` (one MapLibre canvas from globe to street level) were ported from Yamen's global water feature. Styles are in `app/global-explorer.css`, scoped to `.global-*`.
+
+- **Country statistics** — `public/data/global-water.json`: UNEP SDG 6.6.1 / EC JRC permanent + seasonal surface water area in km², aggregated by GAUL 0, 1984–2018, 266 countries and territories. Regenerate with `scripts/build-global-water.py`.
+- **Annual water map** — `lib/annualWater.ts` requests the EC JRC / Google Yearly History ImageServer with a one-year time window, so the selected year redraws the raster. Blue = permanent water, green = seasonal **open** water; non-water and unobserved pixels are transparent. The service covers 1984–2021; the UI stops at 2018 to match the country statistics. The raster and the country totals come from different JRC releases and can differ.
+- **Borders and labels** — Natural Earth country outlines (click hit-testing, `lib/countryGeometry.ts`; area percentages are approximate) and landform labels (`public/data/physical-labels.json`); Esri place labels, whose district coverage is incomplete.
+- **Globe tiles** — 85 low-zoom Earth tiles in `public/data/earth-overview/`.
+
+The map does not repeat the Okavango views: it outlines the study area, can fly there, and links to the radar and history sections. Surface water area is not water level, depth, flood risk, drinking water or a real-time measurement. NISAR data is shown for the Okavango footprint only, never globally. The country numbers are not an input to the RSynthesis projection. Delta AI answers from the Okavango data only.
+
 ## Assets and attribution
 
 The local `public/assets/earth.jpg` is the 2048px Earth atmosphere texture from the three.js example repository:
@@ -58,7 +84,7 @@ https://github.com/mrdoob/three.js/blob/dev/examples/textures/planets/earth_atmo
 
 It is decorative and is not a NISAR raster. Attribution is visible in the hero and footer. The attempted NASA-hosted image was unavailable, so it was not used or credited as a NASA download. Earth graphics are isolated by an error boundary and have a CSS texture fallback.
 
-Basemap: OpenStreetMap, with attribution in the map. Scientific data: NASA / JPL-Caltech and ISRO, via ASF DAAC; processing: EDev data team. Source links are visible in the application.
+Basemaps: OpenStreetMap (Okavango maps and the Streets option) and Esri (water map, imagery, place labels), with attribution in the maps. Global water: EC JRC / Google, UNEP SDG 6.6.1, Natural Earth. Scientific data: NASA / JPL-Caltech and ISRO, via ASF DAAC; processing: EDev data team. Source links are visible in the application.
 
 The site needs a connection for the published JSON, radar PNGs, and basemap tiles. Exported app code and decorative texture are local to the build.
 

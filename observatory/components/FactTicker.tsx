@@ -3,45 +3,44 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 /*
-  Thirty short findings, one every 8 seconds, looping.
-  Every number is read from the published data feed
-  (https://asadgnc.github.io/edev-data/data): timeseries.json (NISAR 2026),
-  history.json (Landsat 1984-2025), story.json (yearly causes, people, events),
-  forecast.json (skill test), assistant_context.json (JRC occurrence, water
-  balance) and meta.json. Questions stay questions; our hypothesis says so.
-  Text between *asterisks* is highlighted.
+  Thirty short findings about the world's water, one every 8 seconds, looping.
+  Numbers computed by us come from the site's own files (public/data:
+  global-water.json = EC JRC / UNEP SDG 6.6.1 country water 1984-2018;
+  world.json = ERA5 rain and heat via Our World in Data, NOAA ONI, UNEP SDG
+  6.6.1 2000-2022; engine-summary.json = our engine's tests). Published
+  findings name their source. Text between *asterisks* is highlighted.
 */
 export const FACTS: [text: string, source: string][] = [
-  ['In 2019 the flood simply did not arrive: only *376 km²* of open water was mapped.', 'Landsat · WOfS annual'],
-  ['2014 held *2,196 km²* of open water. Five years later, 376. The same delta.', 'Landsat · 1984–2025'],
-  ['The water arriving here in July fell as rain in the Angolan highlands months earlier.', 'Inman & Lyons 2020'],
-  ['Of all the water entering the delta, *96–98%* leaves again as vapour, not as river.', 'Water-balance literature'],
-  ['Only about *2%* of the inflow ever flows on towards Maun. A delta that empties upward.', 'Water-balance literature'],
-  ['In 2024 a strong El Niño met flood days *2.0 °C* hotter than normal. Water: 59% down.', 'NASA POWER · ONI · WOfS'],
-  ['During that 2024 drought, herds of hippos were stranded in drying pools near Maun.', 'AFP, 26 April 2024'],
-  ['A sign, or a coincidence? The 2016 El Niño was stronger, yet the flood stayed large.', 'ONI +2.5 · 1,541 km²'],
-  ['Angolan November–April rain explains about *59%* of the yearly water, r = 0.77.', 'Leave-one-year-out test'],
-  ['One number beats the long-term average at predicting this flood: upstream rainfall.', 'Forecast test · skill 0.56'],
-  ['The river model puts the 2026 inflow peak at *808 m³/s*: rank 14 of 30 years.', 'GloFAS model, not a gauge'],
-  ['2026 inflow nearly doubled the 2023–2025 peaks, which all stayed below 460 m³/s.', 'GloFAS model · Mohembo'],
-  ['NISAR saw the 2026 open-water peak on *8 July*: 773 km² of mirror-dark surface.', 'NISAR L2 GCOV · HH, HV'],
-  ['By 12 October 2026 that open water was down to 157 km²: an *80%* retreat.', 'NISAR · 10 dates, 2026'],
-  ['Open water peaked in July. Flooded vegetation peaked *60 days* later, in September.', 'NISAR · 2026 series'],
-  ['Our hypothesis, not proof: the flood fills the channels first, the reed beds later.', 'EDev-Vision reading'],
-  ['In September 2026 nearly half of the mapped flood was hiding under vegetation.', 'NISAR · 312 km² flooded veg'],
-  ['L-band radar sees through the canopy; optical sensors do not. Two different deltas.', 'SAR physics · NISAR docs'],
-  ['Open water is dark to radar, flooded reeds are bright. One image holds both answers.', 'Double bounce in HH'],
-  ['In 2019 only 37,700 people lived within 5 km of water, a third fewer than usual.', 'WorldPop 2020 · WOfS'],
-  ['Water moves and people follow it: that count swings by *20,000* between years.', 'WorldPop 2020 · WOfS'],
-  ['Across 41 years, *1,913 km²* of this area was covered by water at least once.', 'JRC occurrence 1984–2024'],
-  ['Only *13 km²* stayed wet in three quarters of those years. A delta is motion.', 'JRC occurrence 1984–2024'],
-  ['Landsat mapped zero water here in 1985. Not a drought: only one cloud-free look.', 'WOfS · low-coverage flag'],
-  ['1988 is missing from the 41-year record. A gap in the data is not a dry year.', 'WOfS · 1988 absent'],
-  ['NISAR has no data between 27 July and 10 August 2026, so we draw the hole.', 'NISAR · known gap'],
-  ['Unfiltered radar left one mapped pixel in six standing alone. That is speckle, not ponds.', 'Quegan & Yu 2001 filter'],
-  ['Frequency B carries a sixteenth of the data and still agrees within tenths of a decibel.', 'NISAR product metadata'],
-  ['All ten 2026 dates share one track, frame and pass: what changes is the ground itself.', 'Track 172 · frame 168'],
-  ['2025 split the evidence: the river model said weak year, Landsat mapped a normal flood.', 'Models disagree, we say so'],
+  ['In 2018 Landsat mapped *3.77 million km²* of inland surface water: more than the whole area of India.', 'EC JRC / UNEP SDG 6.6.1'],
+  ['Canada and Russia alone hold *43%* of the world’s mapped inland surface water.', 'EC JRC / UNEP · 2018'],
+  ['Between 1984 and 2015, permanent water vanished from almost *90,000 km²* — about the size of Lake Superior.', 'Pekel et al. 2016, Nature'],
+  ['In the same years *184,000 km²* of new permanent water formed, much of it behind new dams.', 'Pekel et al. 2016, Nature'],
+  ['Over *70%* of the world’s net loss of permanent water happened in the Middle East and Central Asia.', 'Pekel et al. 2016, Nature'],
+  ['That global map was built from more than *three million* Landsat images at 30 m.', 'Pekel et al. 2016, Nature'],
+  ['In 1984 Landsat could not see about *half* of the world’s water. A gap in the data is not a dry year.', 'EC JRC unobserved estimate'],
+  ['Since 2000, only about *3%* of the world’s water goes unseen by Landsat in a typical year.', 'EC JRC / UNEP · 2000–2018'],
+  ['About a *quarter* of the world’s surface water is seasonal: it comes and goes within one year.', 'EC JRC / UNEP · 2018'],
+  ['In Namibia *96%* of mapped water is seasonal; in Botswana 93%. Whole landscapes flood and dry each year.', 'EC JRC / UNEP · 2018'],
+  ['Oceania’s water is mostly seasonal: only *36%* of it stays all year.', 'EC JRC / UNEP · 2018'],
+  ['Of 101 countries with more than 1,000 km² of water, *91* gained some between 2000–02 and 2016–18.', 'EC JRC / UNEP · our analysis'],
+  ['Part of that gain is better satellites, not more water. We keep poorly seen years out of every model.', 'EDev-Vision method'],
+  ['Cambodia lost *13%* of its surface water between 2000–02 and 2016–18, the largest share among big-water countries.', 'EC JRC / UNEP · our analysis'],
+  ['Australia lost about *2,900 km²* of surface water over the same years, the largest loss in km².', 'EC JRC / UNEP · our analysis'],
+  ['Pakistan’s mapped surface water grew by *82%* from 2000–02 to 2016–18, most of it seasonal.', 'EC JRC / UNEP · our analysis'],
+  ['In Thailand, yearly rain and yearly water move together almost in step: *r = 0.82*.', 'ERA5 · EC JRC / UNEP'],
+  ['In *62* of 208 countries our engine gives rain — this year’s or last year’s — more than half the weight.', 'RSynthesis world engine'],
+  ['El Niño and La Niña carry real weight in *38* countries, most of them far from the Pacific.', 'RSynthesis world engine'],
+  ['In autumn 2026 NOAA’s El Niño index reached *+2.46*: a strong El Niño is under way.', 'NOAA CPC · ONI, Aug–Oct 2026'],
+  ['Worldwide, 2024 was *0.72 °C* warmer than the 1991–2020 average.', 'Copernicus ERA5 · via OWID'],
+  ['More heat means more evaporation: in *13* countries hotter years came with less water.', 'RSynthesis world engine'],
+  ['UNEP’s later release shows the world’s lakes and rivers *+3.1%* larger in 2022 than in 2018.', 'UNEP SDG 6.6.1 · 2018–2022'],
+  ['Our engine never saw a year after 2018. For the whole world it still scores a skill of *0.64* on hidden years.', 'RSynthesis world engine'],
+  ['In *54* of 208 countries the engine leans towards less water than usual in 2030.', 'RSynthesis world engine'],
+  ['*153* countries share rivers, lakes or aquifers with a neighbour.', 'UN-Water'],
+  ['Shared, cross-border basins carry about *60%* of the world’s freshwater flow.', 'UN-Water'],
+  ['NISAR’s L-band radar maps nearly all of Earth’s land and ice every *12 days*, through clouds, day or night.', 'NASA–ISRO NISAR'],
+  ['Radar sees calm water as dark and flooded forests as bright: water hiding under plants *bounces back twice*.', 'SAR physics · NASA OPERA DSWx-S1'],
+  ['Optical satellites miss water under clouds and plants. That is why this site starts from radar.', 'NASA OPERA DSWx-HLS vs DSWx-S1'],
 ];
 
 const INTERVAL_MS = 8000;

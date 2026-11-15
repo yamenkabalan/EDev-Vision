@@ -1,0 +1,28 @@
+{
+ "generated": "2026-11-15",
+ "options": {
+  "causes": [
+   "rain",
+   "rain1",
+   "heat",
+   "enso",
+   "trend"
+  ],
+  "mode": "measured",
+  "from": 1984
+ },
+ "countries_fitted": 208,
+ "mean_years": 21.6,
+ "loo_skill_median": 0.26,
+ "loo_skill_positive": 0.69,
+ "loo_n": 200,
+ "split_skill_median": 0.05,
+ "split_n": 168,
+ "sdg_inside_80": 0.51,
+ "sdg_direction": 0.41,
+ "sdg_n": 184,
+ "world": {
+  "loo_skill": 0.64,
+  "split_skill": 0.69
+ }
+}

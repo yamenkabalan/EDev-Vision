@@ -1,8 +1,8 @@
 'use client';
 import { useCallback, useRef, useState } from 'react';
 
-// One assistant client for the whole page: the "Ask the Okavango" section and
-// the "Ask AI" window (header pill, yearly box, floating button) all use it.
+// One assistant client for the whole page: the AI section and the "Ask AI"
+// window (header pill, floating button) both use it.
 export const ASSISTANT_API = 'https://edev-vision-assistant.vercel.app/api/chat';
 
 export type Message = { role: 'user' | 'assistant'; content: string; failed?: boolean };
@@ -12,7 +12,7 @@ export type Message = { role: 'user' | 'assistant'; content: string; failed?: bo
  * the numbers itself from the published data feed, so the model never relies
  * on values supplied by the browser. Older servers ignore this field.
  */
-export type ChatContext = { date?: string; year?: number; view?: 'nisar' | 'history' };
+export type ChatContext = { place?: string; year?: number };
 
 export function useAssistant() {
   const [messages, setMessages] = useState<Message[]>([]);

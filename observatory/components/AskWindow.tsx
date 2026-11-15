@@ -4,7 +4,7 @@ import type { AssistantChat, ChatContext } from '@/lib/assistant';
 import { COPY } from '@/lib/copy';
 
 /*
-  The one "Ask AI about Okavango" chat. Three entry points open it: the header
+  The one "Ask AI" chat. Three entry points open it: the header
   pill, the "Ask AI about <year>" button in the yearly box and the floating
   button. It opens as a bottom-right panel (a full-screen sheet on phones),
   can be expanded, minimised to a bar, or closed.

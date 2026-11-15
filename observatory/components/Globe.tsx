@@ -21,7 +21,7 @@ function Earth({ reduced, onReady }: { reduced: boolean; onReady: () => void }) 
       <mesh><circleGeometry args={[.009,20]}/><meshBasicMaterial color="#d9f7a7"/></mesh>
       <mesh position={[0,0,.002]}><ringGeometry args={[.021,.024,48]}/><meshBasicMaterial color="#c6eda0" transparent opacity={.85}/></mesh>
       <mesh position={[0,0,.001]}><ringGeometry args={[.045,.0465,48]}/><meshBasicMaterial color="#b9e896" transparent opacity={.35}/></mesh>
-      <Html position={[.03,-.055,.02]} center={false} style={{pointerEvents:'none'}}><div className="globe-pin"><span>OKAVANGO DELTA</span><small>19.3° S / 22.9° E</small></div></Html>
+      <Html position={[.03,-.055,.02]} center={false} style={{pointerEvents:'none'}}><div className="globe-pin"><span>PLANET EARTH</span><small>266 COUNTRIES · ONE WATER RECORD</small></div></Html>
     </group>
   </group>;
 }

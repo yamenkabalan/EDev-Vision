@@ -1,6 +1,5 @@
 'use client';
-import { useState, type ReactNode } from 'react';
-import type { FutureDoc } from '@/lib/future';
+import { useEffect, useState, type ReactNode } from 'react';
 import { sectionNumber } from '@/lib/sections';
 
 /*
@@ -8,7 +7,8 @@ import { sectionNumber } from '@/lib/sections';
   Three square cards read as a formula: DATA + AI = SYNTHESIS / ESTIMATION.
   Hovering (or focusing / tapping) a card makes it grow downwards and list
   short examples. Below, the longer story: raw data, why AI, our own
-  algorithm, and how it was trained and tested. Numbers come from future.json.
+  algorithm, and how it was trained and tested. Numbers come from
+  engine-summary.json (scripts/engine-summary.mts: the world engine tested on every country).
 */
 type Card = { id: string; title: string; icon: ReactNode; lead: string; items: string[] };
 
@@ -20,23 +20,24 @@ const ICONS = {
   synth: <svg viewBox="0 0 64 64" aria-hidden="true" {...stroke}><path d="M6 14 22 8l20 6 16-6v42l-16 6-20-6-16 6Z" /><path d="M22 8v42M42 14v42" /><path d="M12 40c6-1 9-7 14-8s9 4 14 2 7-9 12-12" strokeDasharray="3 3" /><circle cx="52" cy="22" r="4" /><path d="m55 25 4 4" /></svg>,
 };
 
-export default function WhatIs({ future }: { future: FutureDoc | null }) {
+type Summary = { countries_fitted: number; mean_years: number; loo_skill_median: number; loo_skill_positive: number; split_skill_median: number; world: { loo_skill: number | null; split_skill: number | null } };
+
+export default function WhatIs() {
   const [open, setOpen] = useState<string | null>(null);
-  const s1 = future?.stage1, v = future?.stage2.validation;
-  const drought = v?.per_year.find(r => r.year === 2019)?.brier_skill_full ?? null;
-  const pixels = future ? new Intl.NumberFormat('en').format(Math.round(future.stage2.pixels / 1000) * 1000) : '367,000';
+  const [sum, setSum] = useState<Summary | null>(null);
+  useEffect(() => { fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/data/engine-summary.json`).then(r => r.ok ? r.json() : null).then(setSum).catch(() => {}); }, []);
   const cards: Card[] = [
     {
       id: 'data', title: 'Data', icon: ICONS.data, lead: 'Raw data from NASA radars and satellites',
-      items: ['NISAR L-band radar · HH + HV', '10 passes · Jun–Oct 2026 · every 12 days', '41 years of Landsat water maps', 'JRC water history · 1984–2024', 'ERA5 rain · GloFAS river flow', 'NOAA El Niño index · NASA POWER heat', 'NASA OPERA water map · VIIRS photo'],
+      items: ['Global water · 266 countries · 1984–2018', 'NISAR L-band radar · every 12 days', 'NASA OPERA radar + optical water maps', 'VIIRS floods · GPM rain · VIIRS photo', 'Landsat water maps · 1984–2021', 'ERA5 rain and heat for every country', 'NOAA El Niño index · UNEP SDG 6.6.1 to 2022'],
     },
     {
       id: 'ai', title: 'AI', icon: ICONS.ai, lead: 'The power to read and interpret it',
-      items: ['Reads radar physics: dark = open water', 'Finds water hidden under reeds (bright HH)', 'Cleans radar speckle across 10 dates', 'Learns where water goes in wet and dry years', 'Links causes: rain → river → flood', 'Answers questions in plain words', 'Flags uncertainty instead of guessing'],
+      items: ['Reads radar physics: dark = open water', 'Finds water hidden under plants (bright double bounce)', 'Stacks 12 days of orbits into one picture', 'Weighs 32 combinations of causes for every country', 'Links causes: rain, heat, El Niño → water', 'Answers in plain words, for the place you choose', 'Flags uncertainty instead of guessing'],
     },
     {
-      id: 'synth', title: 'Synthesis / Estimation', icon: ICONS.synth, lead: 'Our own algorithm + AI-powered mapping = the delta’s future, drawn as a probability map',
-      items: ['A 0 → 1 chance of water for every 120 m pixel', 'Yearly projection up to 2030', 'Dry, expected and wet scenarios', `Tested on ${s1?.n_years ?? 27} years it never saw`],
+      id: 'synth', title: 'Synthesis / Estimation', icon: ICONS.synth, lead: 'Our own algorithm + AI-powered mapping = the future of any country’s water, drawn by probability',
+      items: ['A 0 → 1 chance for every country and year', 'Yearly projection up to 2030', 'Dry, typical and wet years', 'You choose the causes it may use', `Tested on years it never saw, in ${sum?.countries_fitted ?? 208} countries`],
     },
   ];
   const toggle = (id: string) => setOpen(o => (o === id ? null : id));
@@ -47,7 +48,7 @@ export default function WhatIs({ future }: { future: FutureDoc | null }) {
         <div className="what-head">
           <div className="eyebrow"><span className="section-number">{sectionNumber('what')}</span> OLD NASA DATA + AI = ESTIMATION</div>
           <h2 id="what-title">What is <em>RSynthesis AI?</em></h2>
-          <p>A system that turns decades of raw satellite measurements into an estimate of where the Okavango’s water will be next.</p>
+          <p>Explore how inland surface water changed across countries from 1984 to 2018, then look at the whole Earth through radar. RSynthesis AI turns decades of raw satellite measurements into an estimate of where the water will be next.</p>
         </div>
 
         <div className="formula" role="list">
@@ -75,34 +76,34 @@ export default function WhatIs({ future }: { future: FutureDoc | null }) {
           <article>
             <span className="what-step">01</span>
             <h3>Raw data is not an answer.</h3>
-            <p>A radar satellite does not send pictures of floods. It sends echoes: numbers that say how much microwave energy came back from each patch of ground. NISAR covers nearly all of Earth’s land every 12 days, and a single pass over our study area is already millions of these numbers.</p>
+            <p>A radar satellite does not send pictures of floods. It sends echoes: numbers that say how much microwave energy came back from each patch of ground. NISAR covers nearly all of Earth’s land every 12 days, and a single pass over one wetland is already millions of these numbers.</p>
             <p>Hidden in them are two kinds of water. Calm open water mirrors the signal away and looks <b>dark</b>. Water standing under reeds and papyrus bounces it back between water and stems, so it looks <b>bright</b>.</p>
             <SignalDiagram />
           </article>
           <article>
             <span className="what-step">02</span>
             <h3>An age that needs AI.</h3>
-            <p>Nobody can read that much raw data by eye any more. Processing it now needs machine learning, so we used it for the question that matters most to the people and animals of the Delta: <b>what comes next?</b></p>
-            <p>We trained our model on decades of satellite water maps so it can estimate the years that have not happened yet, instead of only describing the past.</p>
+            <p>Nobody can read that much raw data by eye any more. Processing it now needs machine learning, so we used it for the question that matters most to the people and animals who live by every river, lake and wetland: <b>what comes next?</b></p>
+            <p>We trained our model on decades of satellite water maps of every country so it can estimate the years that have not happened yet, instead of only describing the past.</p>
           </article>
           <article className="what-algorithm">
             <span className="what-step">03</span>
             <h3>Our own algorithm, living between 0 and 1.</h3>
-            <p>Computers are built from 0s and 1s. Our algorithm lives between them: for every 120 m pixel it gives a <b>probability from 0 to 1</b> that the pixel will hold open water.</p>
+            <p>Computers are built from 0s and 1s. Our algorithm lives between them: for every country and year it gives a <b>probability from 0 to 1</b> — the chance that its water ends below its own average, or below its worst year.</p>
             <div className="prob-strip" aria-label="Probability scale from 0 to 1">
               <span>0</span><i /><span>1</span>
-              <code>P(water) = σ(a + b·z)</code>
+              <code>P(less water) = Σ w·T(…)</code>
             </div>
-            <p>It is built with <b>linear algebra</b> (Bayesian regressions solved through Cholesky factors, a hat-matrix shortcut for leave-one-out tests, an SVD of the basin’s rain, and a small 2×2 system solved for each of about {pixels} pixels at once), <b>discrete mathematics</b> (all 64 combinations of six possible causes scored, exact Shapley shares of each cause) and <b>advanced probability and statistics</b> (Bayesian evidence, heavy-tailed errors so outlier years cannot bend the model, cloudy years used as lower bounds, Gibbs sampling, Bayesian logistic regression, uncertainty carried from the causes all the way to the map).</p>
+            <p>It is built with <b>linear algebra</b> (a Bayesian regression solved for every combination of causes, for every country, in your browser), <b>discrete mathematics</b> (all 32 combinations of five possible causes — rain, last year’s rain, heat, El Niño, long-term trend — scored and weighed) and <b>advanced probability and statistics</b> (Bayesian evidence with a Zellner g-prior, a Scott–Berger prior on how many causes, heavy-tailed Student-t errors, cloudy years kept out as lower bounds, thousands of simulated years carrying the uncertainty all the way to the map).</p>
           </article>
           <article>
             <span className="what-step">04</span>
             <h3>Trained, then tested, then it redraws the map.</h3>
-            <p>The model learned from {s1?.n_years ?? 27} well-observed years ({s1?.years[0] ?? 1989}–{s1?.years[1] ?? 2025}) and was tested on years it had never seen. The values it produces are what redraw the map: year by year, pixel by pixel, up to 2030.</p>
+            <p>For each place the model learns from its well-observed Landsat years (on average {sum?.mean_years ?? 21.6} per country) and was tested on years it had never seen. The values it produces are what colour the map: year by year, country by country, up to 2030.</p>
             <div className="what-stats">
-              <div><strong>{s1 ? s1.loo_skill.toFixed(2) : '—'}</strong><span>skill on yearly water, each year left out in turn</span></div>
-              <div><strong>{s1 ? s1.chrono_skill.toFixed(2) : '—'}</strong><span>skill when trained on 1989–2012 and asked about 2013–2025</span></div>
-              <div><strong>{v?.brier_skill_full != null ? `${Math.round(v.brier_skill_full * 100)}%` : '—'}</strong><span>smaller map error than an “average year” map, from the yearly causes alone{drought != null ? ` (${Math.round(drought * 100)}% in the 2019 drought)` : ''}</span></div>
+              <div><strong>{sum?.world.loo_skill?.toFixed(2) ?? '—'}</strong><span>skill for the whole world’s water, each year left out in turn</span></div>
+              <div><strong>{sum ? `${Math.round(sum.loo_skill_positive * 100)}%` : '—'}</strong><span>of {sum?.countries_fitted ?? '—'} countries where it beats “always guess the average” (median skill {sum?.loo_skill_median.toFixed(2) ?? '—'})</span></div>
+              <div><strong>{sum?.split_skill_median.toFixed(2) ?? '—'}</strong><span>median skill when trained to 2008 and asked about 2009–2018: the future is harder, and we say so</span></div>
             </div>
             <p className="what-note">Skill 0 = no better than always guessing the average; 1 = perfect. Details in <a href="#future">Future</a> and <a href="#sources">Sources</a>.</p>
           </article>

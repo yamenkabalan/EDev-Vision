@@ -343,9 +343,12 @@
   html.print-doc .print-root .doc-page{display:flex;width:210mm;height:297mm;aspect-ratio:auto;margin:0;border-radius:0;box-shadow:none;padding:16mm 15mm 12mm;break-after:page;page-break-after:always;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   html.print-doc .print-root .doc-page:last-child{break-after:auto;page-break-after:auto}
   html.print-doc .print-root .doc-cols{gap:26px}
-  html.print-doc .print-root .doc-cols h3{font-size:10.5px;margin:16px 0 7px}
-  html.print-doc .print-root .doc-cols p,html.print-doc .print-root .doc-list,html.print-doc .print-root .doc-bullets{font-size:12.4px;line-height:1.55}
-  html.print-doc .print-root .doc-list li,html.print-doc .print-root .doc-bullets li{margin-bottom:5px}
-  html.print-doc .print-root .doc-refs li{font-size:11.4px;line-height:1.45;margin-bottom:6px}
+  html.print-doc .print-root .doc-cols h3{font-size:10.5px;margin:13px 0 6px}
+  html.print-doc .print-root .doc-cols p,html.print-doc .print-root .doc-list,html.print-doc .print-root .doc-bullets{font-size:11.9px;line-height:1.48}
+  html.print-doc .print-root .doc-list li,html.print-doc .print-root .doc-bullets li{margin-bottom:3px}
+  html.print-doc .print-root .doc-refs li{font-size:11px;line-height:1.4;margin-bottom:4px}
   html.print-doc .print-root .doc-abstract p,html.print-doc .print-root .doc-meta dd{font-size:13.5px}
 }
+
+/* Okavango radar: one line that hands over from the global explorer to the study area. */
+.observatory-lede{max-width:540px;margin-top:16px}

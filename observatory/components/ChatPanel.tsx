@@ -33,7 +33,7 @@ export default function ChatPanel({ chat, title, intro, prompts, context, size =
           <p>{intro}</p>
           <div className="chat-panel-prompts">{prompts.map(p => <button type="button" key={p} onClick={() => send(p)}>{p} <span aria-hidden="true">↗</span></button>)}</div>
         </div>}
-        {messages.map((m, i) => <div key={i} className={`ask-msg ${m.role}${m.failed ? ' failed' : ''}`}><span>{m.role === 'user' ? 'YOU' : 'DELTA AI'}</span><p>{m.content}</p></div>)}
+        {messages.map((m, i) => <div key={i} className={`ask-msg ${m.role}${m.failed ? ' failed' : ''}`}><span>{m.role === 'user' ? 'YOU' : 'RSYNTHESIS AI'}</span><p>{m.content}</p></div>)}
         {busy && <div className="assistant-thinking">Reading the field notes <i /></div>}
       </div>
       <form className="chat-panel-form" onSubmit={e => { e.preventDefault(); send(); }}>

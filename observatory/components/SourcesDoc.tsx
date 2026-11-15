@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import type { FutureDoc } from '@/lib/future';
 import { sectionNumber } from '@/lib/sections';
 
 /*
@@ -27,33 +26,34 @@ function Page({ n, title, children }: { n: number; title: string; children: Reac
   </article>;
 }
 
-function Pages({ future }: { future: FutureDoc | null }) {
-  const s1 = future?.stage1, v = future?.stage2.validation;
-  const drought = v ? [2019, 2021, 2023, 2024].map(y => v.per_year.find(r => r.year === y)?.brier_skill_full).filter((x): x is number => typeof x === 'number') : [];
+type Summary = { countries_fitted: number; mean_years: number; loo_skill_median: number; loo_skill_positive: number; split_skill_median: number; sdg_inside_80: number; sdg_n: number; world: { loo_skill: number | null; split_skill: number | null } };
+
+function Pages({ sum }: { sum: Summary | null }) {
   const f2 = (x: number | undefined | null) => (x == null ? '—' : x.toFixed(2));
+  const pc = (x: number | undefined | null) => (x == null ? '—' : `${Math.round(x * 100)}%`);
   return <>
     <Page n={1} title="Cover">
       <div className="doc-cover">
         <p className="doc-kicker">NASA Space Apps Challenge 2026 · Challenge: “Dancing with the SARs” · Earth Science</p>
         <h1>RSynthesis AI</h1>
-        <p className="doc-sub">Okavango Flood Pulse</p>
-        <p className="doc-formula">Old NASA data + AI = an estimate of the delta’s future</p>
+        <p className="doc-sub">Estimate the future of life: the world’s surface water, 1984 → 2030</p>
+        <p className="doc-formula">Old NASA data + AI = an estimate of the planet’s water future</p>
         <div className="doc-team">
           <h2>Team EDev-Vision</h2>
           <ul>{TEAM.map(t => <li key={t.name}><strong>{t.name}</strong><span>{t.role}</span></li>)}</ul>
         </div>
         <dl className="doc-meta">
-          <div><dt>Topic</dt><dd>The seasonal flood of the Okavango Delta, Botswana, seen by NASA–ISRO NISAR L-band radar, with a projection of open water to 2030.</dd></div>
-          <div><dt>Study area</dt><dd>Okavango Delta, Botswana · 22.0–23.8° E, 18.3–20.0° S</dd></div>
-          <div><dt>Data period</dt><dd>Landsat 1984–2025 · NISAR 26 June – 24 October 2026 · projection 2026–2030</dd></div>
+          <div><dt>Topic</dt><dd>Inland surface water of every country, seen from orbit: radar and optical views of the whole Earth, 35 years of country records, the causes behind them, and a projection to 2030 for any country, continent or the world.</dd></div>
+          <div><dt>Areas</dt><dd>The whole Earth: 266 countries and territories, 6 continents</dd></div>
+          <div><dt>Data period</dt><dd>Country water 1984–2018 (UNEP later release to 2022) · Landsat maps 1984–2021 · rain and heat 1984–2025 · NISAR radar Nov 2025 – Nov 2026 · projection 2019–2030</dd></div>
           <div><dt>Event</dt><dd>Local event, Güngören AltTab Incubation Center, Istanbul, Türkiye · 14–15 November 2026</dd></div>
           <div><dt>Year</dt><dd>2026</dd></div>
         </dl>
         <div className="doc-abstract">
           <h2>Summary</h2>
-          <p>Every year, rain from the Angolan highlands floods the Okavango Delta, a wetland that people and wildlife in a dry country depend on. RSynthesis AI combines NISAR radar, which sees water through clouds and even under reeds, with 41 years of Landsat water maps and records of rain, river flow, El Niño and heat. Our own probability algorithm learns from these data and redraws the map of open water for 2026–2030, and an AI assistant explains every number in plain words.</p>
+          <p>Water decides where life can stay. The site opens on a globe of 266 countries and territories and the surface water Landsat mapped in each of them from 1984 to 2018. Seven live NASA and JRC views — NISAR radar, OPERA radar and optical water maps, floods, rain, a daily photo and Landsat years — show the whole Earth for any 12-day NISAR cycle. For any place, RSynthesis AI links each year’s water to its rain, heat and El Niño, and our own Bayesian engine, running in the reader’s browser with the causes the reader chooses, projects the water to 2030 as chances, ranges and a probability map. Every answer states how well the engine did on years it never saw.</p>
         </div>
-        <p className="doc-links">Data and pipeline: github.com/Asadgnc/edev-data · Website code: github.com/yamenkabalan/EDev-Vision</p>
+        <p className="doc-links">Website code: github.com/yamenkabalan/EDev-Vision · Data pipeline: github.com/Asadgnc/edev-data</p>
       </div>
     </Page>
 
@@ -61,32 +61,34 @@ function Pages({ future }: { future: FutureDoc | null }) {
       <h2 className="doc-h">How it works</h2>
       <div className="doc-cols">
         <section>
-          <h3>The website · one page, nine sections</h3>
+          <h3>The website · one page, ten sections</h3>
           <ol className="doc-list">
             <li><b>What is RSynthesis AI</b> — the idea: data + AI = estimation.</li>
-            <li><b>All-in-one radar</b> — one map, seven layers: our NISAR water classes, NISAR colour radar, raw HH radar, NASA’s NISAR image, NASA OPERA water, VIIRS photo, Landsat history.</li>
-            <li><b>Compare</b> — two dates or two years, aligned, with a swipe divider.</li>
-            <li><b>History</b> — Landsat open water for every year since 1984 with its rain, river flow, El Niño and heat; JRC 1984–2024 water-frequency map.</li>
-            <li><b>Graphics</b> — charts by source and years: measured solid, projected dashed, up to 2030.</li>
-            <li><b>Future</b> — our probability maps for 2026–2030, with the AI chat beside them.</li>
-            <li><b>What should be done</b> — why the dry years happened and what could have been done.</li>
-            <li><b>AI</b> — Delta AI answers only from our data.</li>
+            <li><b>Global water</b> — the JRC water map for any year 1984–2018 and the water of 266 countries, two at a time, each fitted to the map.</li>
+            <li><b>All-in-one radar</b> — one globe, seven live layers: NISAR radar, OPERA radar water (with flooded vegetation), OPERA optical water, VIIRS floods, GPM rain, VIIRS photo, Landsat years; 12 days stacked per step, with play.</li>
+            <li><b>Compare</b> — any place at two years or two 12-day cycles, swipe divider.</li>
+            <li><b>History</b> — every year 1984–2018 for the world, a continent, a country or two countries, with its rain, heat and El Niño.</li>
+            <li><b>Graphics</b> — measured solid, projected dashed to 2030; permanent vs seasonal; rain → water; a check against UNEP after 2018.</li>
+            <li><b>Future</b> — the reader picks place, causes, data treatment and years; the engine refits and answers, with a world probability map.</li>
+            <li><b>What should be done</b> — where water was lost, why, and lessons, also for the chosen place.</li>
+            <li><b>AI</b> — the language-model assistant.</li>
             <li><b>Sources</b> — this document.</li>
           </ol>
           <h3>Reading the radar</h3>
-          <p>NISAR L2 GCOV, L-band (frequency B, 80 m), HH and HV, ten dates from one orbit (track 172, frame 168, ascending), so changes are real changes on the ground. A multitemporal speckle filter (Quegan &amp; Yu 2001) cleans the images. Fixed physical thresholds sort each pixel: <b>open water</b> is dark (HH &lt; −18 dB and HV &lt; −22 dB); <b>flooded vegetation</b> is bright through double bounce (HH &gt; −5 dB and HH − HV &gt; 7 dB). The result is a strict lower bound in km² per date.</p>
+          <p>L-band and C-band radar see through clouds. Calm open water mirrors the signal away and looks dark; water standing under plants returns it twice (double bounce) and looks bright. NASA’s OPERA DSWx-S1 product uses this to map open water and inundated vegetation worldwide; we stack 12 daily layers so one NISAR orbit cycle fills the globe.</p>
         </section>
         <section>
-          <h3>The algorithm · RSynthesis estimation engine</h3>
-          <p><b>1 · How much water.</b> Six possible causes (rain in the Angolan highlands, rain over the Delta, flood-season heat, El Niño / La Niña, last year’s rain, the calendar year) were scored in all 64 combinations by Bayesian evidence (Zellner g-prior, Scott–Berger multiplicity prior). Kept in every model: highland rain (Nov–Apr, ERA5) and the year; uncertain, so averaged in and out: Delta rain and El Niño. Heat, last year’s rain or water, river inflow (gauge and GloFAS) and where in the basin the rain fell were tested and dropped. Each of the 4 models is a Bayesian regression on a Box-Cox scale with Student-t errors and cloudy years as lower bounds, sampled by Gibbs; the forecast is their equal mixture, fitted on {s1?.n_years ?? 27} well-observed Landsat years. Typical error {s1 ? Math.round(s1.loo_rmse_km2) : '—'} km² with each year left out{s1?.v1 ? ` (first version: ${Math.round(s1.v1.loo_rmse_km2)})` : ''}{s1?.rolling_rmse_km2 != null && s1.v1 ? `, ${Math.round(s1.rolling_rmse_km2)} km² forecasting each year from ${s1.rolling_from} from earlier years only (first version: ${Math.round(s1.v1.rolling_rmse_km2)})` : ''}; skill {f2(s1?.chrono_skill)} when trained on 1989–2012 and tested on 2013–2025 (0 = no better than the average, 1 = perfect).</p>
-          <p><b>2 · Where it goes.</b> For each of about {future ? Math.round(future.stage2.pixels / 1000) : 367},000 pixels (120 m) that were ever wet: P(water) = σ(a + b·z), z = the year’s standardised area. A Bayesian logistic regression with priors a ~ N(0, 5²), b ~ N(0, 2.5²), solved for all pixels at once by Newton’s method (a 2×2 linear system per pixel); the Laplace approximation gives each pixel’s uncertainty.</p>
-          <p><b>3 · Redraw the map.</b> For a given yearly area the pixel probabilities get one global log-odds shift (bisection) so the map holds exactly that area. The expected map averages 40 such maps across the forecast range (probit approximation, MacKay 1992); the dry and wet maps use its 10th and 90th percentiles. For 2027–2030 the causes of a random past year are drawn together, because they have not happened yet.</p>
-          <p><b>Tested.</b> Each year was hidden and redrawn from the others. From the yearly causes alone, the map’s squared error is {v?.brier_skill_full != null ? Math.round(v.brier_skill_full * 100) : '—'}% smaller than an “average year” map{drought.length ? `, ${Math.round(Math.min(...drought) * 100)}–${Math.round(Math.max(...drought) * 100)}% in the drought years 2019, 2021, 2023 and 2024` : ''}.</p>
+          <h3>The algorithm · RSynthesis world engine</h3>
+          <p><b>1 · Learn.</b> For a place (country, continent or world), the yearly surface water from Landsat (EC JRC / UNEP SDG 6.6.1) on a log scale. Years when Landsat could not see more than 15% of the water are kept out as lower bounds; the reader may instead add JRC’s estimate for unseen areas.</p>
+          <p><b>2 · Weigh the causes.</b> Five possible causes — rain this year and last year (ERA5), heat (ERA5 anomaly), El Niño (NOAA ONI, Dec–Feb) and a long-term trend. All combinations of the causes the reader allows (up to 32) are fitted as Bayesian regressions with a Zellner g-prior and scored by their exact evidence; a Scott–Berger prior penalises using many causes. The weights give each cause’s weight of evidence and the model average.</p>
+          <p><b>3 · Project.</b> Thousands of future years are simulated: a model by its weight, the causes measured where already known (rain and heat to 2025, El Niño to early 2026) and drawn from the place’s past years where not, and Student-t uncertainty from each model’s posterior. The draws give the median, 80% and 95% ranges, and the chances of a below-average year or a record low. The map repeats this for every country.</p>
+          <p><b>Tested.</b> With the default choices, on {sum?.countries_fitted ?? 208} countries with enough well-observed years (on average {sum?.mean_years ?? '—'}): hiding each year in turn, median skill {f2(sum?.loo_skill_median)}, better than “always the average” in {pc(sum?.loo_skill_positive)} of countries; for the whole world {f2(sum?.world.loo_skill)}. Trained to 2008 and asked about 2009–2018, median skill {f2(sum?.split_skill_median)}: predicting later years is hard. Against UNEP’s later release (2018 → 2022, a different product compared as change only) the observed change fell inside the 80% range in {pc(sum?.sdg_inside_80)} of {sum?.sdg_n ?? '—'} countries.</p>
           <h3>Limits</h3>
           <ul className="doc-bullets">
-            <li>Radar thresholds are physical rules, not calibrated on the ground.</li>
-            <li>One radar frame covers our study area, not the whole Delta.</li>
-            <li>Landsat sees open water only; the projection excludes water under reeds.</li>
+            <li>Surface area only: not depth, volume, groundwater, quality or drinking water.</li>
+            <li>Country records end in 2018; after that only the projection and UNEP’s later release.</li>
+            <li>Landsat misses water under plants and clouds; early years are lower bounds; part of the rise since the 1990s is better coverage.</li>
+            <li>Causes are associations, not proof; dams, irrigation and ice are only seen through the trend.</li>
             <li>The projection is statistical; it cannot know future rain.</li>
           </ul>
         </section>
@@ -99,60 +101,56 @@ function Pages({ future }: { future: FutureDoc | null }) {
         <section>
           <h3>NASA data</h3>
           <ul className="doc-bullets">
-            <li><b>NISAR L2 GCOV, L-band</b> — NASA/JPL and ISRO, via the Alaska Satellite Facility DAAC (search.asf.alaska.edu).</li>
-            <li><b>NASA GIBS</b> — NISAR browse imagery, OPERA DSWx-HLS surface water, VIIRS NOAA-20 true colour. We acknowledge the use of imagery provided by services from NASA’s Global Imagery Browse Services (GIBS), part of NASA’s Earth Science Data and Information System (ESDIS).</li>
-            <li><b>Landsat</b> (USGS/NASA) — via Digital Earth Africa Water Observations from Space (WOfS), annual, 1984–2025.</li>
-            <li><b>NASA POWER</b> (MERRA-2) — flood-season daily maximum temperature.</li>
+            <li><b>NISAR L2 GCOV</b> browse imagery — NASA/JPL and ISRO, via NASA GIBS (nisar.jpl.nasa.gov).</li>
+            <li><b>OPERA L3 DSWx-S1 and DSWx-HLS</b> surface water — NASA JPL OPERA project, via NASA GIBS.</li>
+            <li><b>LANCE VIIRS Combined Flood</b> (3-day), <b>GPM IMERG</b> precipitation rate, <b>NOAA-20 VIIRS</b> true colour — via NASA GIBS. We acknowledge the use of imagery provided by services from NASA’s Global Imagery Browse Services (GIBS), part of NASA’s Earth Science Data and Information System (ESDIS).</li>
+            <li><b>Landsat</b> (USGS/NASA) — the source of every JRC water map and country record below.</li>
           </ul>
           <h3>Space agency partner and other data</h3>
           <ul className="doc-bullets">
             <li><b>ISRO</b> — NASA’s partner agency in the NISAR mission.</li>
-            <li><b>ERA5</b> rain — Copernicus C3S / ECMWF, via Open-Meteo (CC BY 4.0).</li>
-            <li><b>GloFAS</b> river discharge — Copernicus EMS / ECMWF, via Open-Meteo. A model, not a gauge.</li>
-            <li><b>JRC Global Surface Water v1.5</b> — European Commission JRC (Pekel et al. 2016).</li>
-            <li><b>Oceanic Niño Index</b> — NOAA Climate Prediction Center.</li>
-            <li><b>WorldPop 2020</b> population, 1 km (CC BY 4.0) · <b>OpenStreetMap</b> base map (ODbL).</li>
+            <li><b>EC JRC / Google Global Surface Water</b> — Yearly History 1984–2021 (global-surface-water.appspot.com).</li>
+            <li><b>UNEP SDG 6.6.1</b> country water 1984–2018 (storage.googleapis.com/global-surface-water-stats) and lakes &amp; rivers 2000–2022 (UN SDG Global Database, unstats.un.org/sdgs/dataportal).</li>
+            <li><b>Copernicus ERA5</b> yearly precipitation and temperature anomaly by country, processed by Our World in Data (ourworldindata.org).</li>
+            <li><b>NOAA CPC Oceanic Niño Index</b> (cpc.ncep.noaa.gov).</li>
+            <li><b>Natural Earth</b> borders and labels · <b>Esri</b> and <b>OpenStreetMap</b> base maps.</li>
           </ul>
           <h3>Use of AI</h3>
           <ul className="doc-bullets">
-            <li><b>Claude (Anthropic), via Claude Code</b> — helped write and review the data pipeline, the algorithm, the website and the assistant function, and draft documentation. Every number on the site is computed by our published code from the data above.</li>
-            <li><b>OpenAI GPT-5.4 mini</b> (backup: gpt-oss on Groq) — powers Delta AI, which may answer only from our data file. Not trained or fine-tuned by us.</li>
+            <li><b>Claude (Anthropic), via Claude Code</b> — helped write and review the data scripts, the engine, the website and the documentation. Every number on the site is computed by our published code from the data above.</li>
+            <li><b>OpenAI GPT-5.4 mini</b> (backup: gpt-oss on Groq) — powers the AI assistant. Not trained or fine-tuned by us.</li>
             <li>The opening film is an <b>AI-generated decorative sequence</b>, not mission data. No NASA logo or insignia is used.</li>
           </ul>
         </section>
         <section>
           <h3>References</h3>
           <ul className="doc-refs">
-            <li>Pekel, J.-F. et al. (2016). High-resolution mapping of global surface water and its long-term changes. <i>Nature</i> 540, 418–422.</li>
-            <li>Quegan, S., Yu, J. J. (2001). Filtering of multichannel SAR images. <i>IEEE TGRS</i> 39(11), 2373–2379.</li>
-            <li>Inman, V. L., Lyons, M. B. (2020). Automated inundation mapping over large areas using Landsat data and Google Earth Engine. <i>Remote Sensing</i> 12(8), 1348.</li>
-            <li>Wolski, P. et al. (2017). Keeping it simple: monitoring flood extent in large data-poor wetlands using MODIS SWIR data. <i>Int. J. Appl. Earth Obs. Geoinf.</i> 57, 224–234.</li>
-            <li>Box, G. E. P., Cox, D. R. (1964). An analysis of transformations. <i>J. Royal Statistical Society B</i> 26(2), 211–252.</li>
+            <li>Pekel, J.-F., Cottam, A., Gorelick, N., Belward, A. S. (2016). High-resolution mapping of global surface water and its long-term changes. <i>Nature</i> 540, 418–422.</li>
+            <li>Hersbach, H. et al. (2020). The ERA5 global reanalysis. <i>Q. J. Royal Meteorological Society</i> 146, 1999–2049.</li>
+            <li>UNEP (2021). Progress on Freshwater Ecosystems: global indicator 6.6.1 updates and acceleration needs.</li>
+            <li>UN-Water (2024). Progress on Transboundary Water Cooperation (SDG indicator 6.5.2).</li>
             <li>Zellner, A. (1986). On assessing prior distributions and Bayesian regression analysis with g-prior distributions. In <i>Bayesian Inference and Decision Techniques</i>, 233–243.</li>
+            <li>Liang, F. et al. (2008). Mixtures of g priors for Bayesian variable selection. <i>JASA</i> 103(481), 410–423.</li>
             <li>Scott, J. G., Berger, J. O. (2010). Bayes and empirical-Bayes multiplicity adjustment in the variable-selection problem. <i>Annals of Statistics</i> 38(5), 2587–2619.</li>
-            <li>Geweke, J. (1993). Bayesian treatment of the independent Student-t linear model. <i>J. Applied Econometrics</i> 8, S19–S40.</li>
-            <li>Chib, S. (1992). Bayes inference in the Tobit censored regression model. <i>J. Econometrics</i> 51, 79–99.</li>
+            <li>Hoeting, J. A. et al. (1999). Bayesian model averaging: a tutorial. <i>Statistical Science</i> 14(4), 382–417.</li>
             <li>Gneiting, T., Raftery, A. E. (2007). Strictly proper scoring rules, prediction, and estimation. <i>JASA</i> 102(477), 359–378.</li>
-            <li>Smith, J., Wallis, K. F. (2009). A simple explanation of the forecast combination puzzle. <i>Oxford Bulletin of Economics and Statistics</i> 71(3), 331–355.</li>
-            <li>Shapley, L. S. (1953). A value for n-person games. <i>Contributions to the Theory of Games</i> II, 307–317.</li>
-            <li>MacKay, D. J. C. (1992). The evidence framework applied to classification networks. <i>Neural Computation</i> 4(5), 720–736.</li>
-            <li>Gelman, A. et al. (2008). A weakly informative default prior distribution for logistic and other regression models. <i>Annals of Applied Statistics</i> 2(4), 1360–1383.</li>
-            <li>OKACOM (2011). Cubango-Okavango River Basin Transboundary Diagnostic Analysis.</li>
-            <li>NISAR GCOV product guide and Provisional Product Known Issues, nisar-docs.asf.alaska.edu.</li>
-            <li>News: Mmegi (30 Mar 2009); BOPA (26 Apr 2020); AFP via Gulf Times (26 Apr 2024).</li>
+            <li>Marsaglia, G., Tsang, W. W. (2000). A simple method for generating gamma variables. <i>ACM Transactions on Mathematical Software</i> 26(3), 363–372.</li>
+            <li>NISAR mission and OPERA DSWx product specifications, NASA JPL; NASA GIBS API documentation.</li>
           </ul>
           <h3>Software</h3>
-          <p>Python (NumPy, rasterio, h5py, Pillow, asf_search, earthaccess) · Next.js, React, TypeScript, Tailwind CSS, Framer Motion, Leaflet, three.js. Decorative Earth texture: three.js example assets.</p>
+          <p>Python for the data build · TypeScript engine running in the browser · Next.js, React, Tailwind CSS, Framer Motion, MapLibre GL JS, three.js. Decorative Earth texture: three.js example assets.</p>
           <h3>Open source</h3>
-          <p>All code and processed data are public: github.com/Asadgnc/edev-data (data, pipeline, algorithm) and github.com/yamenkabalan/EDev-Vision (website).</p>
+          <p>All code and processed data are public: github.com/yamenkabalan/EDev-Vision (website, world data scripts, engine) and github.com/Asadgnc/edev-data (radar pipeline).</p>
         </section>
       </div>
     </Page>
   </>;
 }
 
-export default function SourcesDoc({ future }: { future: FutureDoc | null }) {
+export default function SourcesDoc() {
   const [page, setPage] = useState(0);
+  const [sum, setSum] = useState<Summary | null>(null);
+  useEffect(() => { fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/data/engine-summary.json`).then(r => r.ok ? r.json() : null).then(setSum).catch(() => {}); }, []);
   const [printing, setPrinting] = useState(false);
   useEffect(() => {
     if (!printing) return;
@@ -177,7 +175,7 @@ export default function SourcesDoc({ future }: { future: FutureDoc | null }) {
           <div className="doc-actions"><a className="small-button doc-download" href={PDF} download>Download PDF ↓</a><button type="button" className="small-button doc-print" onClick={() => setPrinting(true)}>Print ⎙</button></div>
         </div>
         <div className="doc-viewer" data-page={page}>
-          <Pages future={future} />
+          <Pages sum={sum} />
         </div>
         <div className="doc-nav">
           <button type="button" className="small-button" disabled={page === 0} onClick={() => setPage(p => p - 1)}>← Previous page</button>
@@ -185,7 +183,7 @@ export default function SourcesDoc({ future }: { future: FutureDoc | null }) {
           <button type="button" className="small-button" disabled={page === 2} onClick={() => setPage(p => p + 1)}>Next page →</button>
         </div>
       </div>
-      {printing && createPortal(<div className="print-root"><Pages future={future} /></div>, document.body)}
+      {printing && createPortal(<div className="print-root"><Pages sum={sum} /></div>, document.body)}
     </section>
   );
 }

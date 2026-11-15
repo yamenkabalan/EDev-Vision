@@ -1,19 +1,19 @@
 # RSynthesis AI — Estimate the future of life
 
-The whole site is about the world's inland surface water. There is no single focus area any more.
+The maps, charts and forecasts cover inland surface water worldwide. The chat service covers the Okavango Delta case study.
 
 - **02 Global water**: annual inland surface water for 266 countries and territories, 1984–2018, on a MapLibre globe; compare two countries and fit each one to the map with "See on map".
 - **03 All-in-one radar**: one globe with seven live layers (NISAR radar, OPERA DSWx-S1 radar water, OPERA DSWx-HLS optical water, VIIRS floods, GPM IMERG rain, VIIRS photo, JRC Landsat years). 12 daily layers are stacked per NISAR cycle (`lib/gibs.ts`).
 - **04 Compare**: any place at two years or two 12-day cycles, swipe divider (two synced MapLibre maps).
 - **05 History / 06 Graphics / 07 Future / 08 What should be done**: world, continent, country or two countries; the place choice is shared by every section (`components/PlacePicker.tsx`).
 - **RSynthesis world engine** (`lib/world.ts`): Bayesian model averaging over every combination of the chosen causes (rain, last year's rain, heat, El Niño, trend), with a Zellner g-prior and a Scott–Berger prior, a Student-t predictive and simulation to 2030. It runs in the browser on the reader's options.
+- **One-year Ridge experiment** (`experiments/global-water/`): learns changes relative to the last reliable area from water and climate history. What is RSynthesis AI and Sources use the saved test results. The live probability map uses the Bayesian model.
 
 Data files, all committed and rebuilt by scripts:
 
 - `public/data/global-water.json`: EC JRC / UNEP SDG 6.6.1 country water (Yamen's file, `scripts/build-global-water.py`)
 - `public/data/world.json`: ERA5 rain and heat per country (Our World in Data), NOAA ONI, UNEP SDG 6.6.1 2000–2022 and continents (`python scripts/build-world-data.py`)
 - `public/data/engine-summary.json`: the engine tested on every country (`node --experimental-strip-types scripts/engine-summary.mts`)
-- `../../assistant-proxy/api/world-context.json`: what the AI assistant may say (`node --experimental-strip-types scripts/assistant-context.mts`)
 
 New, isolated Next.js App Router implementation. The original HTML frontend in the parent directory is preserved. The source brief is saved as `BUILD_BRIEF.md`.
 
@@ -36,7 +36,7 @@ npm test
 npm run build
 ```
 
-Browser integration check (with the preview running): `node scripts/browser-check.mjs`. It uses the locally installed Chrome; no separate browser download is needed. The script verifies the current published series, intentionally blocks public basemap tile requests during automated pan/zoom, and writes screenshots and results to ignored `qa/`. Real OpenStreetMap tiles were checked separately in a stationary visual preview.
+Browser integration checks for this version run against the production export served on port 4173. Run `node tests/browser-performance.cjs` for page navigation and map controls, and `node tests/radar-detail.cjs` for live NISAR detail. Both use the locally installed Edge.
 
 Verified on 14 November 2026: TypeScript, production static export, three data-adapter tests, live JSON and raster loading, textured WebGL globe, synchronized date/stat/quality changes, rapid-selection race protection, chart gaps, geographic swipe alignment during pan/zoom/resize, 390px mobile layout, reduced motion, feed retry, and missing/zero/raster-failure handling. These are frontend checks, not validation of classification accuracy against ground measurements.
 
@@ -75,7 +75,7 @@ The historical view now loads the published JRC Global Surface Water v1.5 occurr
 - **Borders and labels** — Natural Earth country outlines (click hit-testing, `lib/countryGeometry.ts`; area percentages are approximate) and landform labels (`public/data/physical-labels.json`); Esri place labels, whose district coverage is incomplete.
 - **Globe tiles** — 85 low-zoom Earth tiles in `public/data/earth-overview/`.
 
-The map does not repeat the Okavango views: it outlines the study area, can fly there, and links to the radar and history sections. Surface water area is not water level, depth, flood risk, drinking water or a real-time measurement. NISAR data is shown for the Okavango footprint only, never globally. The country numbers are not an input to the RSynthesis projection. Delta AI answers from the Okavango data only.
+The annual country totals are inputs to the Bayesian projection. The radar section retrieves available NISAR browse imagery from NASA GIBS across the globe. Surface water area describes the mapped extent. The Okavango assistant uses the local case-study record.
 
 ## Assets and attribution
 

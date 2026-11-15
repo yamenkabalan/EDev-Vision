@@ -115,7 +115,7 @@ export type Fit = {
   effect: Record<Cause, number>;
 };
 
-function solve(A: number[][], b: number[]): number[] | null {
+export function solve(A: number[][], b: number[]): number[] | null {
   const n = b.length, M = A.map((row, i) => [...row, b[i]]);
   for (let c = 0; c < n; c++) {
     let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
@@ -171,7 +171,7 @@ export function fit(world: World, place: Place, opt: EngineOptions, leaveOut: (y
     const Xty = vars.map(a => X[a].reduce((s, v, i) => s + v * yc[i], 0));
     const inv = inverse(XtX); if (!inv) continue;
     const bhat = inv.map(row => row.reduce((s, v, j) => s + v * Xty[j], 0));
-    const SSR = bhat.reduce((s, v, j) => s + v * Xty[j], 0), R2 = Math.min(.9999, Math.max(0, SSR / SST));
+    const SSR = bhat.reduce((s, v, j) => s + v * Xty[j], 0), R2 = SST > 0 ? Math.min(.9999, Math.max(0, SSR / SST)) : 0;
     const logEv = ((n - 1 - k) / 2) * Math.log(1 + g) - ((n - 1) / 2) * Math.log(1 + g * (1 - R2)) + prior;
     const shrink = g / (1 + g);
     models.push({ vars, weight: 0, n, ybar, beta: bhat.map(b => b * shrink), shrink, S: SST * (1 - shrink * R2), XtXinv: inv, logEv });
@@ -205,16 +205,20 @@ export type ProjectionYear = { year: number; p025: number; p10: number; p50: num
 
 /** Where a cause is not known for a year, draw it from these years of the same place. */
 function pool(doc: WorldDoc, place: Place, cause: Cause): number[] {
-  const years = cause === 'heat' ? doc.climate_years.filter(y => y >= 2016) : cause === 'enso' ? doc.oni.years : doc.climate_years;
-  return years.map(y => rawCause(doc, place, cause, y)).filter((v): v is number => v !== undefined);
+  const years = cause === 'enso' ? doc.oni.years : doc.climate_years;
+  const values = (ys: number[]) => ys.map(y => rawCause(doc, place, cause, y)).filter((v): v is number => v !== undefined);
+  if (cause !== 'heat') return values(years);
+  const recent = values(years.filter(y => y >= 2016));
+  return recent.length ? recent : values(years).slice(-10);
 }
 
 export function project(world: World, place: Place, f: Fit, years: number[], draws = 1200, seed = 7): ProjectionYear[] {
   if (!f.ok) return [];
-  const doc = world.doc, r = rng(seed), pools = Object.fromEntries(f.used.map(c => [c, pool(doc, place, c)])) as Record<Cause, number[]>;
+  const doc = world.doc, pools = Object.fromEntries(f.used.map(c => [c, pool(doc, place, c)])) as Record<Cause, number[]>;
   const cum: number[] = []; let acc = 0; for (const m of f.models) { acc += m.weight; cum.push(acc); }
   const cap = Math.max(...usable(series(place, world.years, 'gapfilled')).map(p => p.value), f.observedMean) * 3;
   return years.map(year => {
+    const r = rng(seed);
     const raw = Object.fromEntries(f.used.map(c => [c, rawCause(doc, place, c, year)])) as Record<Cause, number | undefined>;
     const missing = f.used.filter(c => raw[c] === undefined);
     const known: Known = !missing.length ? 'known' : missing.length < f.used.filter(c => c !== 'trend').length ? 'partly' : 'unknown';
@@ -266,7 +270,7 @@ export function validate(world: World, place: Place, opt: EngineOptions): Valida
   let sdg: Validation['sdg'] = null;
   const s18 = sdgAt(world.doc, place.sdg, 2018), s22 = sdgAt(world.doc, place.sdg, 2022), last = obs.get(2018);
   if (s18 && s22 && last) {
-    const p = project(world, place, full, [2022], 1200, 22)[0];
+    const p = project(world, place, full, [2022])[0];
     sdg = { from: 2018, to: 2022, observed: s22 / s18 - 1, predicted: p.p50 / last - 1, p10: p.p10 / last - 1, p90: p.p90 / last - 1 };
   }
   return { loo, split, sdg };

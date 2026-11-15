@@ -7,19 +7,12 @@ export const ASSISTANT_API = 'https://edev-vision-assistant.vercel.app/api/chat'
 
 export type Message = { role: 'user' | 'assistant'; content: string; failed?: boolean };
 
-/**
- * What the reader is looking at. Only identifiers are sent: the server builds
- * the numbers itself from the published data feed, so the model never relies
- * on values supplied by the browser. Older servers ignore this field.
- */
-export type ChatContext = { place?: string; year?: number };
-
 export function useAssistant() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [busy, setBusy] = useState(false);
   const history = useRef<Message[]>([]);
 
-  const ask = useCallback(async (question: string, context?: ChatContext) => {
+  const ask = useCallback(async (question: string) => {
     const content = question.trim();
     if (!content || busy) return;
     const next = [...history.current, { role: 'user' as const, content: content.slice(0, 800) }];
@@ -32,7 +25,7 @@ export function useAssistant() {
       const response = await fetch(ASSISTANT_API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(context ? { messages: sent, context } : { messages: sent }),
+        body: JSON.stringify({ messages: sent }),
       });
       const data = await response.json();
       if (!response.ok || !data.answer) throw new Error(data.error || `Assistant request failed (${response.status}).`);

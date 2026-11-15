@@ -42,6 +42,13 @@ test('projections are ordered quantiles and reproducible', () => {
   assert.equal(W.project(world, p, f, [2020])[0].known, 'known');
 });
 
+test('the same year has the same projection alone or in a chart', () => {
+  const p = byName('India'), f = W.fit(world, p, W.DEFAULT_OPTIONS);
+  const [, chart] = W.project(world, p, f, [2022, 2030]);
+  const [map] = W.project(world, p, f, [2030]);
+  assert.deepEqual(chart, map);
+});
+
 test('chosen causes change the answer', () => {
   const p = byName('Australia');
   const all = W.fit(world, p, W.DEFAULT_OPTIONS), trendOnly = W.fit(world, p, { ...W.DEFAULT_OPTIONS, causes: ['trend'] });

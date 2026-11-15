@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Section } from '@/lib/sections';
 
 /*
@@ -11,7 +11,7 @@ import type { Section } from '@/lib/sections';
 */
 type State = { active: number; fill: number[]; left: number };
 
-export default function SectionRail({ sections, onActive }: { sections: readonly Section[]; onActive?: (id: string) => void }) {
+export default function SectionRail({ sections, onActive, mobileAction }: { sections: readonly Section[]; onActive?: (id: string) => void; mobileAction?: ReactNode }) {
   const [state, setState] = useState<State>({ active: 0, fill: sections.map(() => 0), left: 1 });
   const [open, setOpen] = useState(false);
   const last = useRef('');
@@ -83,13 +83,16 @@ export default function SectionRail({ sections, onActive }: { sections: readonly
     </nav>
 
     <div className="rail-mobile" data-open={open}>
-      {open && <ol className="rail-sheet" id="rail-sheet">{items(() => setOpen(false))}</ol>}
-      <button type="button" className="rail-bar" aria-expanded={open} aria-controls="rail-sheet" onClick={() => setOpen(o => !o)}>
-        <span className="rail-num">{num(active)}/{num(n - 1)}</span>
-        <span className="rail-bar-label">{sections[active].label}</span>
-        <span className="rail-bar-left">{left <= 0.005 ? 'End' : `${Math.max(1, Math.round(left * 100))}% left`}</span>
-        <i className="rail-bar-meter" style={{ transform: `scaleX(${1 - left})` }} aria-hidden="true" />
-      </button>
+      <ol className="rail-sheet" id="rail-sheet" hidden={!open}>{items(() => setOpen(false))}</ol>
+      <div className="rail-mobile-controls">
+        <button type="button" className="rail-bar" aria-expanded={open} aria-controls="rail-sheet" onClick={() => setOpen(o => !o)}>
+          <span className="rail-num">{num(active)}/{num(n - 1)}</span>
+          <span className="rail-bar-label">{sections[active].label}</span>
+          <span className="rail-bar-left">{left <= 0.005 ? 'End' : `${Math.max(1, Math.round(left * 100))}% left`}</span>
+          <i className="rail-bar-meter" style={{ transform: `scaleX(${1 - left})` }} aria-hidden="true" />
+        </button>
+        {mobileAction}
+      </div>
     </div>
   </>;
 }

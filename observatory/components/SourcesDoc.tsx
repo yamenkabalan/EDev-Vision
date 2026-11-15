@@ -2,6 +2,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { sectionNumber } from '@/lib/sections';
+import type { RidgeResearch } from '@/lib/ridgeResearch';
 
 /*
   Sources: the project document the NASA Space Apps rules ask for, as three
@@ -26,16 +27,15 @@ function Page({ n, title, children }: { n: number; title: string; children: Reac
   </article>;
 }
 
-type Summary = { countries_fitted: number; mean_years: number; loo_skill_median: number; loo_skill_positive: number; split_skill_median: number; sdg_inside_80: number; sdg_n: number; world: { loo_skill: number | null; split_skill: number | null } };
+type Summary = { loo_skill_median: number; split_skill_median: number };
 
-function Pages({ sum }: { sum: Summary | null }) {
+function Pages({ sum, ridge }: { sum: Summary | null; ridge: RidgeResearch }) {
   const f2 = (x: number | undefined | null) => (x == null ? '—' : x.toFixed(2));
-  const pc = (x: number | undefined | null) => (x == null ? '—' : `${Math.round(x * 100)}%`);
   return <>
     <Page n={1} title="Cover">
       <div className="doc-cover">
         <p className="doc-kicker">NASA Space Apps Challenge 2026 · Challenge: “Dancing with the SARs” · Earth Science</p>
-        <h1>RSynthesis AI</h1>
+        <h2 className="doc-title">RSynthesis AI</h2>
         <p className="doc-sub">Estimate the future of life: the world’s surface water, 1984 → 2030</p>
         <p className="doc-formula">Old NASA data + AI = an estimate of the planet’s water future</p>
         <div className="doc-team">
@@ -51,7 +51,7 @@ function Pages({ sum }: { sum: Summary | null }) {
         </dl>
         <div className="doc-abstract">
           <h2>Summary</h2>
-          <p>Water decides where life can stay. The site opens on a globe of 266 countries and territories and the surface water Landsat mapped in each of them from 1984 to 2018. Seven live NASA and JRC views — NISAR radar, OPERA radar and optical water maps, floods, rain, a daily photo and Landsat years — show the whole Earth for any 12-day NISAR cycle. For any place, RSynthesis AI links each year’s water to its rain, heat and El Niño, and our own Bayesian engine, running in the reader’s browser with the causes the reader chooses, projects the water to 2030 as chances, ranges and a probability map. Every answer states how well the engine did on years it never saw.</p>
+          <p>The site opens on a globe of 266 countries and territories and the surface water Landsat mapped from 1984 to 2018. Seven NASA and JRC views show satellite observations where imagery is available. For places with enough data, the interactive Bayesian model estimates surface water up to 2030 and reports ranges and probabilities. A separate Ridge regression experiment tests one-year area estimates using past observations and climate data.</p>
         </div>
         <p className="doc-links">Website code: github.com/yamenkabalan/EDev-Vision · Data pipeline: github.com/Asadgnc/edev-data</p>
       </div>
@@ -70,26 +70,27 @@ function Pages({ sum }: { sum: Summary | null }) {
             <li><b>History</b> — every year 1984–2018 for the world, a continent, a country or two countries, with its rain, heat and El Niño.</li>
             <li><b>Graphics</b> — measured solid, projected dashed to 2030; permanent vs seasonal; rain → water; a check against UNEP after 2018.</li>
             <li><b>Future</b> — the reader picks place, causes, data treatment and years; the engine refits and answers, with a world probability map.</li>
-            <li><b>What should be done</b> — where water was lost, why, and lessons, also for the chosen place.</li>
-            <li><b>AI</b> — the language-model assistant.</li>
+            <li><b>What should be done</b> — where mapped water declined, associated inputs and monitoring options.</li>
+            <li><b>AI</b> — the Okavango Delta case-study assistant.</li>
             <li><b>Sources</b> — this document.</li>
           </ol>
           <h3>Reading the radar</h3>
-          <p>L-band and C-band radar see through clouds. Calm open water mirrors the signal away and looks dark; water standing under plants returns it twice (double bounce) and looks bright. NASA’s OPERA DSWx-S1 product uses this to map open water and inundated vegetation worldwide; we stack 12 daily layers so one NISAR orbit cycle fills the globe.</p>
+          <p>L-band and C-band radar see through clouds. Calm open water often looks dark; flooded vegetation can look bright through double-bounce scattering. We combine available NISAR browse images from up to 12 days. Coverage depends on published passes.</p>
         </section>
         <section>
-          <h3>The algorithm · RSynthesis world engine</h3>
-          <p><b>1 · Learn.</b> For a place (country, continent or world), the yearly surface water from Landsat (EC JRC / UNEP SDG 6.6.1) on a log scale. Years when Landsat could not see more than 15% of the water are kept out as lower bounds; the reader may instead add JRC’s estimate for unseen areas.</p>
-          <p><b>2 · Weigh the causes.</b> Five possible causes — rain this year and last year (ERA5), heat (ERA5 anomaly), El Niño (NOAA ONI, Dec–Feb) and a long-term trend. All combinations of the causes the reader allows (up to 32) are fitted as Bayesian regressions with a Zellner g-prior and scored by their exact evidence; a Scott–Berger prior penalises using many causes. The weights give each cause’s weight of evidence and the model average.</p>
-          <p><b>3 · Project.</b> Thousands of future years are simulated: a model by its weight, the causes measured where already known (rain and heat to 2025, El Niño to early 2026) and drawn from the place’s past years where not, and Student-t uncertainty from each model’s posterior. The draws give the median, 80% and 95% ranges, and the chances of a below-average year or a record low. The map repeats this for every country.</p>
-          <p><b>Tested.</b> With the default choices, on {sum?.countries_fitted ?? 208} countries with enough well-observed years (on average {sum?.mean_years ?? '—'}): hiding each year in turn, median skill {f2(sum?.loo_skill_median)}, better than “always the average” in {pc(sum?.loo_skill_positive)} of countries; for the whole world {f2(sum?.world.loo_skill)}. Trained to 2008 and asked about 2009–2018, median skill {f2(sum?.split_skill_median)}: predicting later years is hard. Against UNEP’s later release (2018 → 2022, a different product compared as change only) the observed change fell inside the 80% range in {pc(sum?.sdg_inside_80)} of {sum?.sdg_n ?? '—'} countries.</p>
+          <h3>One-year Ridge experiment</h3>
+          <p>Estimated area equals the last reliable area (km²) times the exponential of the predicted log change. A shared Ridge regression learns that change using earlier water and climate observations. The multiplier is limited to 0.5–2.</p>
+          <p>From {ridge.firstYear} to {ridge.lastYear}, Ridge gave {ridge.worldError.toFixed(2)}% WAPE for the world total and {ridge.countryError.toFixed(2)}% across {ridge.countries} countries and territories. Carrying the last area forward gave {ridge.worldBaseline.toFixed(2)}% and {ridge.countryBaseline.toFixed(2)}% respectively. An equal-weight ensemble gave {ridge.basinError.toFixed(2)}% across {ridge.basins} basins.</p>
+          <h3>Interactive Bayesian projections</h3>
+          <p>The live charts and probability map use Bayesian model averaging over the selected inputs: rain, prior-year rain, temperature, ENSO and trend. The engine uses a Zellner g-prior and a Scott–Berger model-size prior. Student-t predictive draws give the median, ranges and chances from 0 to 1.</p>
+          <p>The default model excludes years when estimated unseen water exceeds 15% of measured water. Its median skill was {f2(sum?.loo_skill_median)} when hiding each year in turn and {f2(sum?.split_skill_median)} when training through 2008 and estimating 2009–2018 with observed climate inputs. The later UNEP release compares 2018–2022 changes with climate inputs available in the site data.</p>
           <h3>Limits</h3>
           <ul className="doc-bullets">
             <li>Surface area only: not depth, volume, groundwater, quality or drinking water.</li>
-            <li>Country records end in 2018; after that only the projection and UNEP’s later release.</li>
+            <li>Country water series end in 2018. JRC maps continue to 2021 and the later UNEP series to 2022.</li>
             <li>Landsat misses water under plants and clouds; early years are lower bounds; part of the rise since the 1990s is better coverage.</li>
             <li>Causes are associations, not proof; dams, irrigation and ice are only seen through the trend.</li>
-            <li>The projection is statistical; it cannot know future rain.</li>
+            <li>The Bayesian projection samples unavailable climate inputs from past years. Ridge tests use earlier years in today’s data release.</li>
           </ul>
         </section>
       </div>
@@ -118,7 +119,7 @@ function Pages({ sum }: { sum: Summary | null }) {
           <h3>Use of AI</h3>
           <ul className="doc-bullets">
             <li><b>Claude (Anthropic), via Claude Code</b> — helped write and review the data scripts, the engine, the website and the documentation. Every number on the site is computed by our published code from the data above.</li>
-            <li><b>OpenAI GPT-5.4 mini</b> (backup: gpt-oss on Groq) — powers the AI assistant. Not trained or fine-tuned by us.</li>
+            <li><b>Language-model assistant</b> — answers questions about the Okavango Delta case study through a separate service.</li>
             <li>The opening film is an <b>AI-generated decorative sequence</b>, not mission data. No NASA logo or insignia is used.</li>
           </ul>
         </section>
@@ -129,6 +130,7 @@ function Pages({ sum }: { sum: Summary | null }) {
             <li>Hersbach, H. et al. (2020). The ERA5 global reanalysis. <i>Q. J. Royal Meteorological Society</i> 146, 1999–2049.</li>
             <li>UNEP (2021). Progress on Freshwater Ecosystems: global indicator 6.6.1 updates and acceleration needs.</li>
             <li>UN-Water (2024). Progress on Transboundary Water Cooperation (SDG indicator 6.5.2).</li>
+            <li>Hoerl, A. E., Kennard, R. W. (1970). Ridge regression: biased estimation for nonorthogonal problems. <i>Technometrics</i> 12, 55–67.</li>
             <li>Zellner, A. (1986). On assessing prior distributions and Bayesian regression analysis with g-prior distributions. In <i>Bayesian Inference and Decision Techniques</i>, 233–243.</li>
             <li>Liang, F. et al. (2008). Mixtures of g priors for Bayesian variable selection. <i>JASA</i> 103(481), 410–423.</li>
             <li>Scott, J. G., Berger, J. O. (2010). Bayes and empirical-Bayes multiplicity adjustment in the variable-selection problem. <i>Annals of Statistics</i> 38(5), 2587–2619.</li>
@@ -147,7 +149,7 @@ function Pages({ sum }: { sum: Summary | null }) {
   </>;
 }
 
-export default function SourcesDoc() {
+export default function SourcesDoc({ ridge }: { ridge: RidgeResearch }) {
   const [page, setPage] = useState(0);
   const [sum, setSum] = useState<Summary | null>(null);
   useEffect(() => { fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/data/engine-summary.json`).then(r => r.ok ? r.json() : null).then(setSum).catch(() => {}); }, []);
@@ -175,7 +177,7 @@ export default function SourcesDoc() {
           <div className="doc-actions"><a className="small-button doc-download" href={PDF} download>Download PDF ↓</a><button type="button" className="small-button doc-print" onClick={() => setPrinting(true)}>Print ⎙</button></div>
         </div>
         <div className="doc-viewer" data-page={page}>
-          <Pages sum={sum} />
+          <Pages sum={sum} ridge={ridge} />
         </div>
         <div className="doc-nav">
           <button type="button" className="small-button" disabled={page === 0} onClick={() => setPage(p => p - 1)}>← Previous page</button>
@@ -183,7 +185,7 @@ export default function SourcesDoc() {
           <button type="button" className="small-button" disabled={page === 2} onClick={() => setPage(p => p + 1)}>Next page →</button>
         </div>
       </div>
-      {printing && createPortal(<div className="print-root"><Pages sum={sum} /></div>, document.body)}
+      {printing && createPortal(<div className="print-root"><Pages sum={sum} ridge={ridge} /></div>, document.body)}
     </section>
   );
 }

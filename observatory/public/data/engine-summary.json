@@ -19,7 +19,7 @@
  "split_skill_median": 0.05,
  "split_n": 168,
  "sdg_inside_80": 0.51,
- "sdg_direction": 0.41,
+ "sdg_direction": 0.38,
  "sdg_n": 184,
  "world": {
   "loo_skill": 0.64,

@@ -1,2 +1,4 @@
 import Experience from '@/components/Experience';
-export default function Page() { return <Experience />; }
+import { ridgeResearch } from '@/lib/ridgeResearch';
+
+export default function Page() { return <Experience ridge={ridgeResearch} />; }

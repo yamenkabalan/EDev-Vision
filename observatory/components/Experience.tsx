@@ -3,9 +3,10 @@ import { Component, useCallback, useEffect, useRef, useState, type CSSProperties
 import dynamic from 'next/dynamic';
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { COPY } from '@/lib/copy';
-import { useAssistant, type ChatContext } from '@/lib/assistant';
+import { useAssistant } from '@/lib/assistant';
 import { SECTIONS } from '@/lib/sections';
 import { DEFAULT_SELECTION, loadWorld, type Selection, type World } from '@/lib/world';
+import type { RidgeResearch } from '@/lib/ridgeResearch';
 import FactTicker from './FactTicker';
 import AskWindow from './AskWindow';
 import SectionRail from './SectionRail';
@@ -30,7 +31,8 @@ class GraphicBoundary extends Component<{children:ReactNode;onFailure:()=>void},
   render(){return this.state.failed?null:this.props.children;}
 }
 function Arrow({down=false}:{down?:boolean}){return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={down?{transform:'rotate(90deg)'}:undefined}><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.5"/></svg>;}
-export default function Experience(){
+function ChatIcon(){return <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01" strokeWidth="2.4"/></svg>;}
+export default function Experience({ ridge }: { ridge: RidgeResearch }){
   const reduced=!!useReducedMotion();const heroRef=useRef<HTMLElement>(null);
   const {scrollYProgress}=useScroll({target:heroRef,offset:['start start','end start']});
   const globeY=useTransform(scrollYProgress,[0,1],[0,-180]);const globeScale=useTransform(scrollYProgress,[0,1],[1,.82]);
@@ -66,8 +68,6 @@ export default function Experience(){
   const [activeSection,setActiveSection]=useState('');
   const inlineChat=activeSection==='ai';
   const onGlobeReady=useCallback(()=>setGlobeReady(true),[]),onGlobeFailure=useCallback(()=>setGlobeReady(false),[]);
-  const chatContext:ChatContext={place:selection.a};
-  const chatContextLabel=COPY.chat.context(world?.byKey.get(selection.a)?.name??null);
   const fabVisible=pastHero&&!askOpen&&!inlineChat;
   return <>
     <a href="#what" className="skip-link">Skip to the content</a>
@@ -90,7 +90,7 @@ export default function Experience(){
     </section>
     <div className="page-shell">
     <main className="page-main">
-      <WhatIs/>
+      <WhatIs ridge={ridge}/>
       <GlobalExplorer/>
       <WorldRadar world={world} selection={selection} onSelect={setSelection}/>
       <WorldCompare world={world} selection={selection} onSelect={setSelection}/>
@@ -98,15 +98,15 @@ export default function Experience(){
       <WorldGraphics world={world} selection={selection} onSelect={setSelection}/>
       <WorldFuture world={world} selection={selection} onSelect={setSelection}/>
       <WorldSolutions world={world} selection={selection} onSelect={setSelection}/>
-      <AiSection chat={chat} context={chatContext} contextLabel={chatContextLabel}/>
-      <SourcesDoc/>
+      <AiSection chat={chat}/>
+      <SourcesDoc ridge={ridge}/>
     <footer className="wrap site-footer"><a className="brand" href="#pulse"><span className="brand-symbol">◉</span><span className="brand-name"><span>RSYNTHESIS <b>AI</b></span><small className="brand-credit">by EDev-Vision</small></span></a><p>NASA Space Apps Challenge 2026<br/>Dancing with the SARs</p><p>Radar and water layers: NASA–ISRO NISAR, NASA OPERA, LANCE, GPM and VIIRS via NASA GIBS.<br/>Global water: EC JRC / Google Global Surface Water · UNEP SDG 6.6.1 · ERA5 (Copernicus, via Our World in Data) · NOAA ONI · Natural Earth.<br/><a href="https://github.com/mrdoob/three.js/blob/dev/examples/textures/planets/earth_atmos_2048.jpg" target="_blank" rel="noreferrer">Decorative Earth: three.js example texture ↗</a></p><a href="#pulse" className="back-top" aria-label="Back to top">↑</a></footer>
     </main>
-    <SectionRail sections={SECTIONS} onActive={setActiveSection}/>
+    <SectionRail sections={SECTIONS} onActive={setActiveSection} mobileAction={pastHero&&!inlineChat?<button type="button" className="rail-chat" aria-label={COPY.chat.fab} aria-expanded={askOpen} aria-haspopup="dialog" onClick={openAsk}><ChatIcon/></button>:null}/>
     </div>
-    <AskWindow open={askOpen} summon={askSummon} onClose={closeAsk} prefill="" context={chatContext} contextLabel={chatContextLabel} chat={chat}/>
+    <AskWindow open={askOpen} summon={askSummon} onClose={closeAsk} chat={chat}/>
     <button type="button" className="v2-ask-fab" data-visible={fabVisible} inert={!fabVisible} aria-label={COPY.chat.fab} title={COPY.chat.fab} aria-haspopup="dialog" onClick={openAsk}>
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01" strokeWidth="2.4"/></svg>
+      <ChatIcon/>
     </button>
   </>;
 }

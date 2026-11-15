@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import type { AssistantChat, ChatContext } from '@/lib/assistant';
+import type { AssistantChat } from '@/lib/assistant';
 import { COPY } from '@/lib/copy';
 
 /*
@@ -23,14 +23,11 @@ type Props = {
   onClose: () => void;
   /** Question placed in the input (not sent) when the window is summoned. */
   prefill?: string;
-  /** Selection sent with every question; the server builds the data context from it. */
-  context?: ChatContext;
-  contextLabel?: string;
   /** The page-wide conversation (see useAssistant in Experience). */
   chat: AssistantChat;
 };
 
-export default function AskWindow({ open, summon, onClose, prefill, context, contextLabel, chat }: Props) {
+export default function AskWindow({ open, summon, onClose, prefill, chat }: Props) {
   const { messages, busy, ask } = chat;
   const [mode, setMode] = useState<Mode>('small');
   const [question, setQuestion] = useState('');
@@ -79,7 +76,7 @@ export default function AskWindow({ open, summon, onClose, prefill, context, con
 
   if (!open) return null;
 
-  const send = (q = question) => { if (!q.trim() || busy) return; setQuestion(''); void ask(q, context); };
+  const send = (q = question) => { if (!q.trim() || busy) return; setQuestion(''); void ask(q); };
 
   return (
     <section className="ask-window" data-mode={mode} role="dialog" aria-label={C.title}>
@@ -101,7 +98,6 @@ export default function AskWindow({ open, summon, onClose, prefill, context, con
         <div className="ask-window-log" ref={log} aria-live="polite">
           {!messages.length && <div className="ask-window-hello">
             <p>{C.intro}</p>
-            {contextLabel && <p className="ask-window-context">{contextLabel}</p>}
             <div className="ask-window-prompts">{C.prompts.map((p) => <button type="button" key={p} onClick={() => send(p)}>{p}</button>)}</div>
           </div>}
           {messages.map((m, i) => <div key={i} className={`ask-msg ${m.role}${m.failed ? ' failed' : ''}`}><span>{m.role === 'user' ? C.you : C.ai}</span><p>{m.content}</p></div>)}

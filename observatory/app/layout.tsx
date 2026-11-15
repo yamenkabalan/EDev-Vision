@@ -8,7 +8,7 @@ import './global-explorer.css';
 import './world.css';
 export const metadata: Metadata = {
   title: 'RSynthesis AI — Estimate the future of life',
-  description: 'Explore how inland surface water changed across 266 countries and territories from 1984 to 2018, see the whole Earth through NISAR radar and six more NASA and JRC views, and project any country’s water to 2030 with our Bayesian engine.',
+  description: 'Explore surface water observations for 266 countries and territories, satellite imagery, Bayesian projections through 2030, and a one-year Ridge regression experiment.',
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return <html lang="en"><body className="antialiased selection:bg-lime-200/25">{children}</body></html>;

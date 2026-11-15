@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import type { AssistantChat, ChatContext } from '@/lib/assistant';
+import type { AssistantChat } from '@/lib/assistant';
 
 /*
   Inline chat console. The Future section (side panel) and the AI section use
@@ -12,19 +12,18 @@ type Props = {
   title: string;
   intro: string;
   prompts: readonly string[];
-  context?: ChatContext;
   /** Visible height of the message log. */
   size?: 'side' | 'large';
   placeholder?: string;
 };
 
-export default function ChatPanel({ chat, title, intro, prompts, context, size = 'large', placeholder = 'Ask about water, rain, the future or the data…' }: Props) {
+export default function ChatPanel({ chat, title, intro, prompts, size = 'large', placeholder = 'Ask about water in the Okavango Delta…' }: Props) {
   const { messages, busy, ask } = chat;
   const [question, setQuestion] = useState('');
   const log = useRef<HTMLDivElement>(null);
   // Follow new messages inside the log only; never scroll the page itself.
   useEffect(() => { const el = log.current; if (el) el.scrollTop = el.scrollHeight; }, [messages, busy]);
-  const send = (q = question) => { if (!q.trim() || busy) return; setQuestion(''); void ask(q, context); };
+  const send = (q = question) => { if (!q.trim() || busy) return; setQuestion(''); void ask(q); };
   return (
     <div className={`chat-panel chat-${size}`}>
       <div className="chat-panel-head"><span><i className="signal-dot" /> {title}</span><span className="chat-panel-model">DATA-GROUNDED · CAN BE WRONG</span></div>

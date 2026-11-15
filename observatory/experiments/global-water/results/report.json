@@ -1,0 +1,948 @@
+{
+  "inputs": {
+    "countriesAndTerritories": 266,
+    "basins": 292,
+    "inputSha256": {
+      "globalWater": "58fde80c694bb7348d574220f10bd32d12aa584bc3f130c68eb8a20c2708766a",
+      "world": "4d68faf06cb999e3c74a5732d3d62227c9357117554f0f53e7f4e5bfe451bf5e",
+      "hydrobasins": "4681fccd63edaef0b0336c97db464fd7018c10b5b49f557358094b792f965216"
+    },
+    "basinSource": "https://storage.googleapis.com/global-surface-water-stats/hydrobasins3-all-2018.csv"
+  },
+  "evaluationYears": [
+    2013,
+    2018
+  ],
+  "target": "JRC measured permanent plus seasonal surface-water area (km²)",
+  "cutoffRule": "Water, climate and forecast errors available through target year minus horizon",
+  "evaluation": {
+    "1": {
+      "countries": {
+        "places": 200,
+        "rows": 1127,
+        "allYears": [
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "candidates": {
+          "persistence": {
+            "mae_km2": 745.322,
+            "rmse_km2": 3541.538,
+            "wape_pct": 3.81,
+            "mape_pct": 6.513,
+            "median_ape_pct": 3.103,
+            "within_3_pct": 48.891
+          },
+          "median3": {
+            "mae_km2": 867.855,
+            "rmse_km2": 4160.782,
+            "wape_pct": 4.437,
+            "mape_pct": 7.071,
+            "median_ape_pct": 3.809,
+            "within_3_pct": 43.478
+          },
+          "dampedTrend": {
+            "mae_km2": 796.826,
+            "rmse_km2": 3709.643,
+            "wape_pct": 4.074,
+            "mape_pct": 6.977,
+            "median_ape_pct": 3.206,
+            "within_3_pct": 48.092
+          },
+          "bayesian": {
+            "mae_km2": 943.78,
+            "rmse_km2": 4736.421,
+            "wape_pct": 4.825,
+            "mape_pct": 8.021,
+            "median_ape_pct": 4.853,
+            "within_3_pct": 35.315
+          },
+          "waterPanel": {
+            "mae_km2": 760.46,
+            "rmse_km2": 3436.139,
+            "wape_pct": 3.888,
+            "mape_pct": 6.399,
+            "median_ape_pct": 3.64,
+            "within_3_pct": 45.608
+          },
+          "climatePanel": {
+            "mae_km2": 737.343,
+            "rmse_km2": 3363.725,
+            "wape_pct": 3.77,
+            "mape_pct": 6.406,
+            "median_ape_pct": 3.621,
+            "within_3_pct": 44.454
+          },
+          "equal": {
+            "mae_km2": 741.645,
+            "rmse_km2": 3516.884,
+            "wape_pct": 3.792,
+            "mape_pct": 6.296,
+            "median_ape_pct": 3.533,
+            "within_3_pct": 46.229
+          },
+          "equalSelected": {
+            "mae_km2": 743.642,
+            "rmse_km2": 3386.475,
+            "wape_pct": 3.802,
+            "mape_pct": 6.347,
+            "median_ape_pct": 3.47,
+            "within_3_pct": 45.874
+          },
+          "learned": {
+            "mae_km2": 743.179,
+            "rmse_km2": 3381.852,
+            "wape_pct": 3.799,
+            "mape_pct": 6.346,
+            "median_ape_pct": 3.465,
+            "within_3_pct": 45.874
+          },
+          "wapeBlend": {
+            "mae_km2": 771.253,
+            "rmse_km2": 3671.713,
+            "wape_pct": 3.943,
+            "mape_pct": 6.591,
+            "median_ape_pct": 3.775,
+            "within_3_pct": 44.188
+          }
+        }
+      },
+      "countriesMax5pctUnobserved": {
+        "places": 199,
+        "rows": 1098,
+        "allYears": [
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "candidates": {
+          "persistence": {
+            "mae_km2": 745.548,
+            "rmse_km2": 3579.39,
+            "wape_pct": 3.754,
+            "mape_pct": 6.404,
+            "median_ape_pct": 3.077,
+            "within_3_pct": 49.454
+          },
+          "median3": {
+            "mae_km2": 874.079,
+            "rmse_km2": 4210.213,
+            "wape_pct": 4.401,
+            "mape_pct": 7.051,
+            "median_ape_pct": 3.74,
+            "within_3_pct": 44.262
+          },
+          "dampedTrend": {
+            "mae_km2": 796.207,
+            "rmse_km2": 3748.698,
+            "wape_pct": 4.009,
+            "mape_pct": 6.85,
+            "median_ape_pct": 3.149,
+            "within_3_pct": 48.725
+          },
+          "bayesian": {
+            "mae_km2": 948.091,
+            "rmse_km2": 4791.943,
+            "wape_pct": 4.773,
+            "mape_pct": 8.04,
+            "median_ape_pct": 4.874,
+            "within_3_pct": 35.155
+          },
+          "waterPanel": {
+            "mae_km2": 763.432,
+            "rmse_km2": 3473.842,
+            "wape_pct": 3.844,
+            "mape_pct": 6.358,
+            "median_ape_pct": 3.588,
+            "within_3_pct": 46.175
+          },
+          "climatePanel": {
+            "mae_km2": 739.4,
+            "rmse_km2": 3399.921,
+            "wape_pct": 3.723,
+            "mape_pct": 6.368,
+            "median_ape_pct": 3.611,
+            "within_3_pct": 44.991
+          },
+          "equal": {
+            "mae_km2": 744.893,
+            "rmse_km2": 3556.284,
+            "wape_pct": 3.75,
+            "mape_pct": 6.253,
+            "median_ape_pct": 3.518,
+            "within_3_pct": 46.448
+          },
+          "equalSelected": {
+            "mae_km2": 745.62,
+            "rmse_km2": 3422.715,
+            "wape_pct": 3.754,
+            "mape_pct": 6.296,
+            "median_ape_pct": 3.433,
+            "within_3_pct": 46.357
+          },
+          "learned": {
+            "mae_km2": 745.1,
+            "rmse_km2": 3417.934,
+            "wape_pct": 3.751,
+            "mape_pct": 6.295,
+            "median_ape_pct": 3.416,
+            "within_3_pct": 46.357
+          },
+          "wapeBlend": {
+            "mae_km2": 774.815,
+            "rmse_km2": 3713.586,
+            "wape_pct": 3.901,
+            "mape_pct": 6.564,
+            "median_ape_pct": 3.765,
+            "within_3_pct": 44.536
+          }
+        }
+      },
+      "continents": {
+        "places": 6,
+        "rows": 36,
+        "allYears": [
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "candidates": {
+          "persistence": {
+            "mae_km2": 17507.697,
+            "rmse_km2": 26735.478,
+            "wape_pct": 2.838,
+            "mape_pct": 5.246,
+            "median_ape_pct": 2.516,
+            "within_3_pct": 55.556
+          },
+          "median3": {
+            "mae_km2": 19578.861,
+            "rmse_km2": 28536.75,
+            "wape_pct": 3.174,
+            "mape_pct": 5.761,
+            "median_ape_pct": 3.342,
+            "within_3_pct": 50
+          },
+          "dampedTrend": {
+            "mae_km2": 18677.433,
+            "rmse_km2": 27847.601,
+            "wape_pct": 3.028,
+            "mape_pct": 5.941,
+            "median_ape_pct": 2.77,
+            "within_3_pct": 50
+          },
+          "bayesian": {
+            "mae_km2": 24733.755,
+            "rmse_km2": 33675.877,
+            "wape_pct": 4.009,
+            "mape_pct": 5.515,
+            "median_ape_pct": 4.739,
+            "within_3_pct": 36.111
+          },
+          "waterPanel": {
+            "mae_km2": 18003.359,
+            "rmse_km2": 24194.953,
+            "wape_pct": 2.918,
+            "mape_pct": 4.815,
+            "median_ape_pct": 3.224,
+            "within_3_pct": 50
+          },
+          "climatePanel": {
+            "mae_km2": 16856.249,
+            "rmse_km2": 22935.888,
+            "wape_pct": 2.732,
+            "mape_pct": 4.694,
+            "median_ape_pct": 3.269,
+            "within_3_pct": 47.222
+          },
+          "equal": {
+            "mae_km2": 17547.128,
+            "rmse_km2": 24850.9,
+            "wape_pct": 2.844,
+            "mape_pct": 4.904,
+            "median_ape_pct": 3.235,
+            "within_3_pct": 47.222
+          },
+          "equalSelected": {
+            "mae_km2": 19264.254,
+            "rmse_km2": 26181.533,
+            "wape_pct": 3.123,
+            "mape_pct": 5.128,
+            "median_ape_pct": 3.591,
+            "within_3_pct": 41.667
+          },
+          "learned": {
+            "mae_km2": 19268.036,
+            "rmse_km2": 26180.346,
+            "wape_pct": 3.123,
+            "mape_pct": 5.13,
+            "median_ape_pct": 3.594,
+            "within_3_pct": 41.667
+          },
+          "wapeBlend": {
+            "mae_km2": 18617.648,
+            "rmse_km2": 25091.162,
+            "wape_pct": 3.018,
+            "mape_pct": 4.914,
+            "median_ape_pct": 3.453,
+            "within_3_pct": 44.444
+          }
+        }
+      },
+      "world": {
+        "places": 1,
+        "rows": 6,
+        "allYears": [
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "candidates": {
+          "persistence": {
+            "mae_km2": 89194.35,
+            "rmse_km2": 117160.756,
+            "wape_pct": 2.41,
+            "mape_pct": 2.417,
+            "median_ape_pct": 1.178,
+            "within_3_pct": 66.667
+          },
+          "median3": {
+            "mae_km2": 87742.833,
+            "rmse_km2": 112427.058,
+            "wape_pct": 2.37,
+            "mape_pct": 2.34,
+            "median_ape_pct": 1.8,
+            "within_3_pct": 66.667
+          },
+          "dampedTrend": {
+            "mae_km2": 93226.725,
+            "rmse_km2": 116502.145,
+            "wape_pct": 2.519,
+            "mape_pct": 2.525,
+            "median_ape_pct": 1.607,
+            "within_3_pct": 66.667
+          },
+          "bayesian": {
+            "mae_km2": 231660.325,
+            "rmse_km2": 242228.816,
+            "wape_pct": 6.259,
+            "mape_pct": 6.223,
+            "median_ape_pct": 5.508,
+            "within_3_pct": 0
+          },
+          "waterPanel": {
+            "mae_km2": 90118.737,
+            "rmse_km2": 109538.204,
+            "wape_pct": 2.435,
+            "mape_pct": 2.423,
+            "median_ape_pct": 3.123,
+            "within_3_pct": 33.333
+          },
+          "climatePanel": {
+            "mae_km2": 79935.797,
+            "rmse_km2": 97060.538,
+            "wape_pct": 2.16,
+            "mape_pct": 2.153,
+            "median_ape_pct": 2.476,
+            "within_3_pct": 66.667
+          },
+          "equal": {
+            "mae_km2": 96994.472,
+            "rmse_km2": 119549.686,
+            "wape_pct": 2.62,
+            "mape_pct": 2.61,
+            "median_ape_pct": 2.797,
+            "within_3_pct": 50
+          },
+          "equalSelected": {
+            "mae_km2": 83671.928,
+            "rmse_km2": 104396.07,
+            "wape_pct": 2.26,
+            "mape_pct": 2.244,
+            "median_ape_pct": 2.601,
+            "within_3_pct": 66.667
+          },
+          "learned": {
+            "mae_km2": 83906.336,
+            "rmse_km2": 104785.267,
+            "wape_pct": 2.267,
+            "mape_pct": 2.25,
+            "median_ape_pct": 2.566,
+            "within_3_pct": 66.667
+          },
+          "wapeBlend": {
+            "mae_km2": 85105.123,
+            "rmse_km2": 105398.901,
+            "wape_pct": 2.299,
+            "mape_pct": 2.28,
+            "median_ape_pct": 2.34,
+            "within_3_pct": 66.667
+          }
+        }
+      },
+      "basins": {
+        "places": 251,
+        "rows": 1460,
+        "allYears": [
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "candidates": {
+          "persistence": {
+            "mae_km2": 717.139,
+            "rmse_km2": 1942.95,
+            "wape_pct": 4.066,
+            "mape_pct": 6.176,
+            "median_ape_pct": 2.469,
+            "within_3_pct": 54.795
+          },
+          "median3": {
+            "mae_km2": 774.622,
+            "rmse_km2": 2151.528,
+            "wape_pct": 4.392,
+            "mape_pct": 6.905,
+            "median_ape_pct": 3.074,
+            "within_3_pct": 49.247
+          },
+          "dampedTrend": {
+            "mae_km2": 783.176,
+            "rmse_km2": 2091.929,
+            "wape_pct": 4.44,
+            "mape_pct": 6.746,
+            "median_ape_pct": 2.8,
+            "within_3_pct": 51.507
+          },
+          "bayesian": {
+            "mae_km2": 845.514,
+            "rmse_km2": 2347.48,
+            "wape_pct": 4.794,
+            "mape_pct": 7.753,
+            "median_ape_pct": 3.995,
+            "within_3_pct": 41.164
+          },
+          "waterPanel": {
+            "mae_km2": 740.373,
+            "rmse_km2": 1947.309,
+            "wape_pct": 4.198,
+            "mape_pct": 6.277,
+            "median_ape_pct": 2.988,
+            "within_3_pct": 50.068
+          },
+          "equal": {
+            "mae_km2": 688.293,
+            "rmse_km2": 1868.519,
+            "wape_pct": 3.902,
+            "mape_pct": 6.093,
+            "median_ape_pct": 2.672,
+            "within_3_pct": 53.493
+          },
+          "equalSelected": {
+            "mae_km2": 714.811,
+            "rmse_km2": 1951.224,
+            "wape_pct": 4.053,
+            "mape_pct": 6.013,
+            "median_ape_pct": 2.756,
+            "within_3_pct": 52.123
+          },
+          "learned": {
+            "mae_km2": 714.876,
+            "rmse_km2": 1950.961,
+            "wape_pct": 4.053,
+            "mape_pct": 6.002,
+            "median_ape_pct": 2.772,
+            "within_3_pct": 52.123
+          },
+          "wapeBlend": {
+            "mae_km2": 706.041,
+            "rmse_km2": 1929.467,
+            "wape_pct": 4.003,
+            "mape_pct": 6.324,
+            "median_ape_pct": 2.9,
+            "within_3_pct": 51.233
+          }
+        }
+      }
+    },
+    "2": {
+      "countries": {
+        "places": 194,
+        "rows": 1104,
+        "allYears": [
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "candidates": {
+          "persistence": {
+            "mae_km2": 1033.593,
+            "rmse_km2": 4762.628,
+            "wape_pct": 5.182,
+            "mape_pct": 7.96,
+            "median_ape_pct": 4.306,
+            "within_3_pct": 41.214
+          },
+          "median3": {
+            "mae_km2": 1087.202,
+            "rmse_km2": 4991.386,
+            "wape_pct": 5.451,
+            "mape_pct": 8.009,
+            "median_ape_pct": 4.451,
+            "within_3_pct": 38.043
+          },
+          "dampedTrend": {
+            "mae_km2": 1178.829,
+            "rmse_km2": 5201.192,
+            "wape_pct": 5.91,
+            "mape_pct": 9.03,
+            "median_ape_pct": 4.337,
+            "within_3_pct": 39.946
+          },
+          "bayesian": {
+            "mae_km2": 1089.349,
+            "rmse_km2": 5664.767,
+            "wape_pct": 5.462,
+            "mape_pct": 8.549,
+            "median_ape_pct": 5.389,
+            "within_3_pct": 33.333
+          },
+          "waterPanel": {
+            "mae_km2": 1011.073,
+            "rmse_km2": 4640.866,
+            "wape_pct": 5.069,
+            "mape_pct": 7.597,
+            "median_ape_pct": 4.304,
+            "within_3_pct": 39.04
+          },
+          "climatePanel": {
+            "mae_km2": 1034.393,
+            "rmse_km2": 4715.718,
+            "wape_pct": 5.186,
+            "mape_pct": 7.733,
+            "median_ape_pct": 4.407,
+            "within_3_pct": 36.141
+          },
+          "equal": {
+            "mae_km2": 1008.2,
+            "rmse_km2": 4704.876,
+            "wape_pct": 5.055,
+            "mape_pct": 7.548,
+            "median_ape_pct": 4.189,
+            "within_3_pct": 40.036
+          },
+          "equalSelected": {
+            "mae_km2": 1000.725,
+            "rmse_km2": 4691.879,
+            "wape_pct": 5.017,
+            "mape_pct": 7.513,
+            "median_ape_pct": 4.292,
+            "within_3_pct": 39.402
+          },
+          "learned": {
+            "mae_km2": 1000.295,
+            "rmse_km2": 4688.588,
+            "wape_pct": 5.015,
+            "mape_pct": 7.515,
+            "median_ape_pct": 4.308,
+            "within_3_pct": 39.312
+          },
+          "wapeBlend": {
+            "mae_km2": 1045.381,
+            "rmse_km2": 5127.9,
+            "wape_pct": 5.241,
+            "mape_pct": 7.691,
+            "median_ape_pct": 4.484,
+            "within_3_pct": 36.594
+          }
+        }
+      },
+      "countriesMax5pctUnobserved": {
+        "places": 192,
+        "rows": 1076,
+        "allYears": [
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "candidates": {
+          "persistence": {
+            "mae_km2": 1039.122,
+            "rmse_km2": 4816.81,
+            "wape_pct": 5.133,
+            "mape_pct": 7.882,
+            "median_ape_pct": 4.23,
+            "within_3_pct": 42.007
+          },
+          "median3": {
+            "mae_km2": 1102.893,
+            "rmse_km2": 5053.618,
+            "wape_pct": 5.448,
+            "mape_pct": 8.035,
+            "median_ape_pct": 4.469,
+            "within_3_pct": 38.569
+          },
+          "dampedTrend": {
+            "mae_km2": 1182.843,
+            "rmse_km2": 5256.993,
+            "wape_pct": 5.843,
+            "mape_pct": 8.918,
+            "median_ape_pct": 4.223,
+            "within_3_pct": 40.613
+          },
+          "bayesian": {
+            "mae_km2": 1095.643,
+            "rmse_km2": 5731.559,
+            "wape_pct": 5.412,
+            "mape_pct": 8.574,
+            "median_ape_pct": 5.416,
+            "within_3_pct": 33.178
+          },
+          "waterPanel": {
+            "mae_km2": 1021.086,
+            "rmse_km2": 4696.283,
+            "wape_pct": 5.044,
+            "mape_pct": 7.597,
+            "median_ape_pct": 4.298,
+            "within_3_pct": 39.033
+          },
+          "climatePanel": {
+            "mae_km2": 1045.867,
+            "rmse_km2": 4772.196,
+            "wape_pct": 5.166,
+            "mape_pct": 7.743,
+            "median_ape_pct": 4.431,
+            "within_3_pct": 36.152
+          },
+          "equal": {
+            "mae_km2": 1017.675,
+            "rmse_km2": 4760.993,
+            "wape_pct": 5.027,
+            "mape_pct": 7.533,
+            "median_ape_pct": 4.177,
+            "within_3_pct": 40.428
+          },
+          "equalSelected": {
+            "mae_km2": 1013.294,
+            "rmse_km2": 4749.526,
+            "wape_pct": 5.005,
+            "mape_pct": 7.53,
+            "median_ape_pct": 4.292,
+            "within_3_pct": 39.312
+          },
+          "learned": {
+            "mae_km2": 1012.895,
+            "rmse_km2": 4746.155,
+            "wape_pct": 5.003,
+            "mape_pct": 7.531,
+            "median_ape_pct": 4.308,
+            "within_3_pct": 39.219
+          },
+          "wapeBlend": {
+            "mae_km2": 1057.86,
+            "rmse_km2": 5190.998,
+            "wape_pct": 5.225,
+            "mape_pct": 7.706,
+            "median_ape_pct": 4.465,
+            "within_3_pct": 36.431
+          }
+        }
+      },
+      "continents": {
+        "places": 6,
+        "rows": 36,
+        "allYears": [
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "candidates": {
+          "persistence": {
+            "mae_km2": 23965.694,
+            "rmse_km2": 33478.246,
+            "wape_pct": 3.885,
+            "mape_pct": 7.093,
+            "median_ape_pct": 3.717,
+            "within_3_pct": 47.222
+          },
+          "median3": {
+            "mae_km2": 25206.383,
+            "rmse_km2": 33063.029,
+            "wape_pct": 4.086,
+            "mape_pct": 6.856,
+            "median_ape_pct": 5.298,
+            "within_3_pct": 36.111
+          },
+          "dampedTrend": {
+            "mae_km2": 27490.724,
+            "rmse_km2": 36750.117,
+            "wape_pct": 4.456,
+            "mape_pct": 8.813,
+            "median_ape_pct": 4.287,
+            "within_3_pct": 41.667
+          },
+          "bayesian": {
+            "mae_km2": 29930.283,
+            "rmse_km2": 40805.79,
+            "wape_pct": 4.852,
+            "mape_pct": 6.105,
+            "median_ape_pct": 5.372,
+            "within_3_pct": 33.333
+          },
+          "waterPanel": {
+            "mae_km2": 24021.448,
+            "rmse_km2": 31252.57,
+            "wape_pct": 3.894,
+            "mape_pct": 6.073,
+            "median_ape_pct": 3.702,
+            "within_3_pct": 41.667
+          },
+          "climatePanel": {
+            "mae_km2": 25287.149,
+            "rmse_km2": 32396.683,
+            "wape_pct": 4.099,
+            "mape_pct": 6.21,
+            "median_ape_pct": 3.847,
+            "within_3_pct": 38.889
+          },
+          "equal": {
+            "mae_km2": 23559.585,
+            "rmse_km2": 32104.834,
+            "wape_pct": 3.819,
+            "mape_pct": 6.352,
+            "median_ape_pct": 3.844,
+            "within_3_pct": 41.667
+          },
+          "equalSelected": {
+            "mae_km2": 26169.667,
+            "rmse_km2": 34776.481,
+            "wape_pct": 4.242,
+            "mape_pct": 6.729,
+            "median_ape_pct": 4.933,
+            "within_3_pct": 30.556
+          },
+          "learned": {
+            "mae_km2": 26181.133,
+            "rmse_km2": 34782.214,
+            "wape_pct": 4.244,
+            "mape_pct": 6.724,
+            "median_ape_pct": 4.917,
+            "within_3_pct": 30.556
+          },
+          "wapeBlend": {
+            "mae_km2": 25335.03,
+            "rmse_km2": 34265.162,
+            "wape_pct": 4.107,
+            "mape_pct": 6.422,
+            "median_ape_pct": 4.814,
+            "within_3_pct": 36.111
+          }
+        }
+      },
+      "world": {
+        "places": 1,
+        "rows": 6,
+        "allYears": [
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "candidates": {
+          "persistence": {
+            "mae_km2": 110289.75,
+            "rmse_km2": 146922.789,
+            "wape_pct": 2.98,
+            "mape_pct": 2.957,
+            "median_ape_pct": 2.34,
+            "within_3_pct": 50
+          },
+          "median3": {
+            "mae_km2": 122310.833,
+            "rmse_km2": 138779.863,
+            "wape_pct": 3.304,
+            "mape_pct": 3.266,
+            "median_ape_pct": 3.265,
+            "within_3_pct": 33.333
+          },
+          "dampedTrend": {
+            "mae_km2": 115737.081,
+            "rmse_km2": 144738.317,
+            "wape_pct": 3.127,
+            "mape_pct": 3.097,
+            "median_ape_pct": 3.278,
+            "within_3_pct": 50
+          },
+          "bayesian": {
+            "mae_km2": 239887.151,
+            "rmse_km2": 250052.826,
+            "wape_pct": 6.481,
+            "mape_pct": 6.441,
+            "median_ape_pct": 6.436,
+            "within_3_pct": 0
+          },
+          "waterPanel": {
+            "mae_km2": 133465.581,
+            "rmse_km2": 148109.607,
+            "wape_pct": 3.606,
+            "mape_pct": 3.576,
+            "median_ape_pct": 3.629,
+            "within_3_pct": 50
+          },
+          "climatePanel": {
+            "mae_km2": 145435.386,
+            "rmse_km2": 158493.954,
+            "wape_pct": 3.929,
+            "mape_pct": 3.893,
+            "median_ape_pct": 4.445,
+            "within_3_pct": 33.333
+          },
+          "equal": {
+            "mae_km2": 134866.987,
+            "rmse_km2": 153123.281,
+            "wape_pct": 3.644,
+            "mape_pct": 3.615,
+            "median_ape_pct": 3.689,
+            "within_3_pct": 50
+          },
+          "equalSelected": {
+            "mae_km2": 106833.164,
+            "rmse_km2": 132811.547,
+            "wape_pct": 2.886,
+            "mape_pct": 2.864,
+            "median_ape_pct": 2.789,
+            "within_3_pct": 50
+          },
+          "learned": {
+            "mae_km2": 106145.22,
+            "rmse_km2": 132693.207,
+            "wape_pct": 2.868,
+            "mape_pct": 2.844,
+            "median_ape_pct": 2.833,
+            "within_3_pct": 50
+          },
+          "wapeBlend": {
+            "mae_km2": 108078.113,
+            "rmse_km2": 128734.65,
+            "wape_pct": 2.92,
+            "mape_pct": 2.888,
+            "median_ape_pct": 2.769,
+            "within_3_pct": 50
+          }
+        }
+      },
+      "basins": {
+        "places": 248,
+        "rows": 1444,
+        "allYears": [
+          2013,
+          2014,
+          2015,
+          2016,
+          2017,
+          2018
+        ],
+        "candidates": {
+          "persistence": {
+            "mae_km2": 943.094,
+            "rmse_km2": 2572.624,
+            "wape_pct": 5.296,
+            "mape_pct": 8.232,
+            "median_ape_pct": 3.567,
+            "within_3_pct": 45.706
+          },
+          "median3": {
+            "mae_km2": 929.681,
+            "rmse_km2": 2538.487,
+            "wape_pct": 5.221,
+            "mape_pct": 8.299,
+            "median_ape_pct": 3.979,
+            "within_3_pct": 41.482
+          },
+          "dampedTrend": {
+            "mae_km2": 1064.961,
+            "rmse_km2": 2929.894,
+            "wape_pct": 5.98,
+            "mape_pct": 9.352,
+            "median_ape_pct": 4.058,
+            "within_3_pct": 41.69
+          },
+          "bayesian": {
+            "mae_km2": 941.823,
+            "rmse_km2": 2638.125,
+            "wape_pct": 5.289,
+            "mape_pct": 8.631,
+            "median_ape_pct": 4.469,
+            "within_3_pct": 37.95
+          },
+          "waterPanel": {
+            "mae_km2": 927.846,
+            "rmse_km2": 2451.357,
+            "wape_pct": 5.21,
+            "mape_pct": 7.839,
+            "median_ape_pct": 3.779,
+            "within_3_pct": 40.997
+          },
+          "equal": {
+            "mae_km2": 882.92,
+            "rmse_km2": 2431.191,
+            "wape_pct": 4.958,
+            "mape_pct": 7.867,
+            "median_ape_pct": 3.601,
+            "within_3_pct": 44.46
+          },
+          "equalSelected": {
+            "mae_km2": 895.927,
+            "rmse_km2": 2451.237,
+            "wape_pct": 5.031,
+            "mape_pct": 7.663,
+            "median_ape_pct": 3.658,
+            "within_3_pct": 43.698
+          },
+          "learned": {
+            "mae_km2": 895.589,
+            "rmse_km2": 2450.714,
+            "wape_pct": 5.029,
+            "mape_pct": 7.64,
+            "median_ape_pct": 3.644,
+            "within_3_pct": 43.49
+          },
+          "wapeBlend": {
+            "mae_km2": 908.676,
+            "rmse_km2": 2490.351,
+            "wape_pct": 5.103,
+            "mape_pct": 7.945,
+            "median_ape_pct": 3.934,
+            "within_3_pct": 41.413
+          }
+        }
+      }
+    }
+  }
+}

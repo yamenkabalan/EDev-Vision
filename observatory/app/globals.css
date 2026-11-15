@@ -109,12 +109,12 @@
 .hero-scrim{position:absolute;inset:0;z-index:-3;pointer-events:none;background:linear-gradient(90deg,#050d0c 0,#050d0cf0 16%,#050d0ca6 34%,#050d0c26 50%,transparent 62%),linear-gradient(0deg,#050d0ccc 0,transparent 22%),linear-gradient(180deg,#050d0cb3 0,transparent 16%);transition:opacity .8s ease,transform .8s ease}
 .hero-section[data-film="hide"] .hero-scrim{opacity:0;transform:translateX(-14%)}
 .hero-section[data-film="reveal"] .hero-scrim{transition:opacity 1.8s cubic-bezier(.16,1,.3,1),transform 2.2s cubic-bezier(.16,1,.3,1)}
-.hero-section[data-film] .film-item{transition:opacity .55s ease,transform .7s cubic-bezier(.16,1,.3,1),filter .55s ease}
+.hero-section[data-film] .film-item{transition:opacity .45s ease,transform .55s cubic-bezier(.16,1,.3,1)}
 span.film-item{display:inline-block}
-.hero-section[data-film="hide"] .film-item{opacity:0;transform:translateY(-12px);filter:blur(8px);pointer-events:none;transition-duration:.45s}
+.hero-section[data-film="hide"] .film-item{opacity:0;transform:translateY(-12px);pointer-events:none;transition-duration:.35s}
 /* Reveal starts from below, so the return reads as rising up rather than reversing the exit. */
 .hero-section[data-film="reveal"] .film-item{animation:film-rise 1.4s cubic-bezier(.16,1,.3,1) calc(.55s + var(--i,0)*.13s) both}
-@keyframes film-rise{from{opacity:0;transform:translateY(34px);filter:blur(10px)}60%{filter:blur(0)}to{opacity:1;transform:none;filter:none}}
+@keyframes film-rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 .hero-section[data-film="reveal"] .hero-content h1 .film-item{animation-duration:1.7s}
 .film-resume{display:block;margin:0 0 14px auto;padding:8px 14px;border:1px solid #c9e6a055;border-radius:999px;background:#050d0cb3;color:#c9e6a0;font:10px 'Courier New',monospace;letter-spacing:1.6px;cursor:pointer;backdrop-filter:blur(6px);transition:background .25s,border-color .25s}
 .film-resume:hover,.film-resume:focus-visible{background:#c9e6a01f;border-color:#c9e6a0}

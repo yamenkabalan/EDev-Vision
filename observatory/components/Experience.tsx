@@ -38,7 +38,18 @@ export default function Experience(){
   const chat=useAssistant();
   // World record (EC JRC / UNEP water + ERA5 + NOAA + UNEP SDG), shared by sections 02-08.
   const [world,setWorld]=useState<World|null>(null);
-  useEffect(()=>{let live=true;loadWorld().then(w=>{if(live)setWorld(w);}).catch(()=>{});return()=>{live=false;};},[]);
+  useEffect(()=>{
+    let live=true;
+    const section=document.getElementById('global');
+    if(!section){loadWorld().then(w=>{if(live)setWorld(w);}).catch(()=>{});return()=>{live=false;};}
+    const observer=new IntersectionObserver(([entry])=>{
+      if(!entry.isIntersecting)return;
+      observer.disconnect();
+      loadWorld().then(w=>{if(live)setWorld(w);}).catch(()=>{});
+    },{rootMargin:'0px'});
+    observer.observe(section);
+    return()=>{live=false;observer.disconnect();};
+  },[]);
   // The place chosen in one section follows the reader down the page.
   const [selection,setSelection]=useState<Selection>(DEFAULT_SELECTION);
   const [globeReady,setGlobeReady]=useState(false);

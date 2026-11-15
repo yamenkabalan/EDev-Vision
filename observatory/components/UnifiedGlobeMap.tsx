@@ -93,7 +93,7 @@ export default function UnifiedGlobeMap({ regions, primary, secondary, focusRegi
       touchPitch: false,
       attributionControl: false,
       fadeDuration: 120,
-      maxTileCacheSize: 80,
+      maxTileCacheSize: 48,
       canvasContextAttributes: { powerPreference: 'high-performance' },
     });
     map.current = m;
@@ -146,7 +146,7 @@ export default function UnifiedGlobeMap({ regions, primary, secondary, focusRegi
     const [lon, lat] = focusRegion.focus;
     const current = m.getZoom();
     const target = current < 3.5 ? 3.5 : Math.min(current, 7.5);
-    m.flyTo({ center: [lon, lat], zoom: target, duration: 900, essential: true });
+    m.flyTo({ center: [lon, lat], zoom: target, duration: 650, essential: true });
   }, [focusRegion, focusToken]);
 
   // The year changes the actual raster, not only the numbers: the tile URL carries a one-year time window.
@@ -157,7 +157,7 @@ export default function UnifiedGlobeMap({ regions, primary, secondary, focusRegi
     return () => window.clearTimeout(timer);
   }, [year, ready]);
 
-  const zoomBy = (step: number) => map.current?.easeTo({ zoom: Math.max(.6, Math.min(18, map.current.getZoom() + step)), duration: 350, essential: true });
+  const zoomBy = (step: number) => map.current?.easeTo({ zoom: Math.max(.6, Math.min(18, map.current.getZoom() + step)), duration: 240, essential: true });
   useEffect(() => {
     const m = map.current;
     if (!m || !fit) return;

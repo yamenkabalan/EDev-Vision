@@ -7,7 +7,7 @@
   1984–2018) with a two-country comparison. Ported from Yamen's explorer.
   The same record feeds the History, Graphics and Future sections below.
 */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { Geometry } from '@/lib/countryGeometry';
 import { loadGlobal, geometryBounds } from '@/lib/world';
@@ -73,6 +73,8 @@ function Chart({ data, primary, secondary, yearIndex, mode, onYear }: { data: Gl
 }
 
 export default function GlobalExplorer() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [nearViewport, setNearViewport] = useState(false);
   const [data, setData] = useState<GlobalData | null>(null);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
@@ -85,6 +87,18 @@ export default function GlobalExplorer() {
   const [focusToken, setFocusToken] = useState(0);
   const [showWater, setShowWater] = useState(true);
   useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) { setNearViewport(true); return; }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setNearViewport(true);
+      observer.disconnect();
+    }, { rootMargin: '0px' });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    if (!nearViewport) return;
     const controller = new AbortController();
     setError('');
     loadGlobal().then(value => {
@@ -93,7 +107,7 @@ export default function GlobalExplorer() {
       setFirst(value.regions.find(r => r.name === 'Brazil')?.id ?? value.regions[0].id);
     }).catch(e => { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : 'Global water data unavailable.'); });
     return () => controller.abort();
-  }, [retry]);
+  }, [retry, nearViewport]);
   const regions = data?.regions || [];
   const primary = regions.find(r => r.id === first) || null;
   const secondary = comparing ? regions.find(r => r.id === second) || null : null;
@@ -111,7 +125,7 @@ export default function GlobalExplorer() {
     setComparing(true); setChartMode('relative');
     if (second === null || second === primary?.id) setSecond(regions.find(r => r.name === (primary?.name === 'India' ? 'Brazil' : 'India'))?.id ?? null);
   };
-  return <section className="global-section" id="global" aria-labelledby="global-title"><div className="wrap">
+  return <section ref={sectionRef} className="global-section" id="global" aria-labelledby="global-title"><div className="wrap">
     <div className="global-heading">
       <div>
         <div className="eyebrow"><span className="section-number">{sectionNumber('global')}</span> GLOBAL WATER · 266 COUNTRIES</div>

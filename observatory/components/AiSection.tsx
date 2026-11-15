@@ -5,8 +5,7 @@ import { sectionNumber } from '@/lib/sections';
 import ChatPanel from './ChatPanel';
 
 /*
-  AI: the full-size assistant console and a plain description of what the
-  assistant is, what it knows and what it will not do.
+  AI: the full-size assistant console and its worldwide data coverage.
 */
 export default function AiSection({ chat }: { chat: AssistantChat }) {
   return (
@@ -14,11 +13,11 @@ export default function AiSection({ chat }: { chat: AssistantChat }) {
       <div className="wrap ai-layout">
         <div className="ai-intro">
           <div className="eyebrow"><span className="section-number">{sectionNumber('ai')}</span> AI · RSYNTHESIS ASSISTANT</div>
-          <h2 id="ai-title">Ask about<br /><em>the Okavango.</em></h2>
-          <p>The assistant uses the Okavango Delta case study in Botswana. Explore other regions in <a href="#global">Global water</a> and <a href="#future">Future</a>.</p>
+          <h2 id="ai-title">Ask about<br /><em>the world’s water.</em></h2>
+          <p>Ask about any country or territory, a continent, or the world. The assistant reads the same annual water, climate and projection records shown in <a href="#global">Global water</a> and <a href="#future">Future</a>.</p>
           <div className="ai-facts">
-            <div><h3>Case study data</h3><ul><li>NISAR radar observations and Landsat water history</li><li>Upstream rainfall and modelled river discharge</li><li>Historical estimates and projections for the delta</li></ul></div>
-            <div><h3>How to read an answer</h3><ul><li>Check whether an area comes from radar, optical imagery or a model</li><li>Use the satellite layers to explore the observations</li></ul></div>
+            <div><h3>Data it can read</h3><ul><li>Annual Landsat water area, 1984–2018, for 266 countries and territories</li><li>Rain and heat records, El Niño, and Bayesian estimates through 2030</li><li>Country, continent and whole-world records, where data are available</li></ul></div>
+            <div><h3>How to read an answer</h3><ul><li>Check the year, units and source behind each number</li><li>Separate satellite measurements from model projections</li><li>Use the Radar layers to inspect available imagery</li></ul></div>
           </div>
         </div>
         <ChatPanel chat={chat} size="large" title={COPY.chat.title}

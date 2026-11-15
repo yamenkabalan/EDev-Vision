@@ -71,7 +71,7 @@ function Pages({ sum, ridge }: { sum: Summary | null; ridge: RidgeResearch }) {
             <li><b>Graphics</b> — measured solid, projected dashed to 2030; permanent vs seasonal; rain → water; a check against UNEP after 2018.</li>
             <li><b>Future</b> — the reader picks place, causes, data treatment and years; the engine refits and answers, with a world probability map.</li>
             <li><b>What should be done</b> — where mapped water declined, associated inputs and monitoring options.</li>
-            <li><b>AI</b> — the Okavango Delta case-study assistant.</li>
+            <li><b>AI</b> — a data-grounded assistant for countries, continents and the world.</li>
             <li><b>Sources</b> — this document.</li>
           </ol>
           <h3>Reading the radar</h3>
@@ -118,8 +118,8 @@ function Pages({ sum, ridge }: { sum: Summary | null; ridge: RidgeResearch }) {
           </ul>
           <h3>Use of AI</h3>
           <ul className="doc-bullets">
-            <li><b>Claude (Anthropic), via Claude Code</b> — helped write and review the data scripts, the engine, the website and the documentation. Every number on the site is computed by our published code from the data above.</li>
-            <li><b>Language-model assistant</b> — answers questions about the Okavango Delta case study through a separate service.</li>
+            <li><b>Claude Code (Anthropic) and OpenAI Codex</b> — helped write and review the data scripts, engine, website and documentation. Site measurements and model estimates come from published project code and the data above.</li>
+            <li><b>OpenAI language-model assistant</b> — the website selects matching world, continent or country records from the same data and engine used by its charts, then sends those records to a server-side model. Its source includes 266 countries and territories, 1984–2018 annual water, climate inputs and Bayesian projections through 2030. Missing records are reported as missing; answers can be wrong and should be checked against the charts.</li>
             <li>The opening film is an <b>AI-generated decorative sequence</b>, not mission data. No NASA logo or insignia is used.</li>
           </ul>
         </section>

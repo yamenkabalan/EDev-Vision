@@ -17,7 +17,7 @@ type Props = {
   placeholder?: string;
 };
 
-export default function ChatPanel({ chat, title, intro, prompts, size = 'large', placeholder = 'Ask about water in the Okavango Delta…' }: Props) {
+export default function ChatPanel({ chat, title, intro, prompts, size = 'large', placeholder = 'Ask about water in any country…' }: Props) {
   const { messages, busy, ask } = chat;
   const [question, setQuestion] = useState('');
   const log = useRef<HTMLDivElement>(null);
@@ -33,7 +33,7 @@ export default function ChatPanel({ chat, title, intro, prompts, size = 'large',
           <div className="chat-panel-prompts">{prompts.map(p => <button type="button" key={p} onClick={() => send(p)}>{p} <span aria-hidden="true">↗</span></button>)}</div>
         </div>}
         {messages.map((m, i) => <div key={i} className={`ask-msg ${m.role}${m.failed ? ' failed' : ''}`}><span>{m.role === 'user' ? 'YOU' : 'RSYNTHESIS AI'}</span><p>{m.content}</p></div>)}
-        {busy && <div className="assistant-thinking">Reading the field notes <i /></div>}
+        {busy && <div className="assistant-thinking">Reading the world record <i /></div>}
       </div>
       <form className="chat-panel-form" onSubmit={e => { e.preventDefault(); send(); }}>
         <textarea rows={1} maxLength={800} value={question} aria-label={`${title}: your question`} placeholder={placeholder}

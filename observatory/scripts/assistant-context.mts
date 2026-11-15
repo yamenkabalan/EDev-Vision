@@ -1,5 +1,4 @@
-// Builds ../../assistant-proxy/api/world-context.json: everything the AI assistant may say about
-// any country, continent or the world, computed by the same engine the site runs.
+// Builds public/data/world-context.json for the site's data-grounded assistant.
 // Run: node --experimental-strip-types scripts/assistant-context.mts
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -14,7 +13,6 @@ const r2 = (v: number | null | undefined) => v == null || !Number.isFinite(v) ? 
 const places: Record<string, unknown> = {};
 for (const p of world.places) {
   const pts = W.series(p, world.years);
-  if (!pts.some((q: { value: number | null }) => q.value)) continue;
   const f = W.fit(world, p, W.DEFAULT_OPTIONS);
   const good = W.usable(pts), avg = W.mean(good.map((q: { value: number }) => q.value));
   const proj = f.ok ? W.project(world, p, f, Array.from({ length: 12 }, (_, i) => 2019 + i)) : [];
@@ -36,6 +34,6 @@ for (const p of world.places) {
   };
 }
 const out = { generated: new Date().toISOString().slice(0, 10), oni_dec_feb: world.doc.oni.years.map((y: number, i: number) => [y, world.doc.oni.djf[i]]), oni_latest: world.doc.oni.latest, places };
-const path = new URL('../../../assistant-proxy/api/world-context.json', import.meta.url);
+const path = new URL('../public/data/world-context.json', import.meta.url);
 writeFileSync(path, JSON.stringify(out));
 console.log('places', Object.keys(places).length, 'bytes', JSON.stringify(out).length);

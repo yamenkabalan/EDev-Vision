@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 
 // One assistant client for the whole page: the AI section and the "Ask AI"
 // window (header pill, floating button) both use it.
-export const ASSISTANT_API = 'https://edev-vision-assistant.vercel.app/api/chat';
+export const ASSISTANT_API = `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/api/chat`;
 
 export type Message = { role: 'user' | 'assistant'; content: string; failed?: boolean };
 

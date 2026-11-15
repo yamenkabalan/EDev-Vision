@@ -16,7 +16,7 @@ export const SECTIONS: readonly Section[] = [
   { id: 'graphics', label: 'Graphics', hint: 'Charts up to 2030' },
   { id: 'future', label: 'Future', hint: 'Our engine, your choices' },
   { id: 'solutions', label: 'What should be done', hint: 'Causes and lessons' },
-  { id: 'ai', label: 'AI', hint: 'Ask about the Okavango' },
+  { id: 'ai', label: 'AI', hint: 'Ask about world water' },
   { id: 'sources', label: 'Sources', hint: 'Team, method, references' },
 ];
 

@@ -16,7 +16,7 @@ export default function AiSection({ chat }: { chat: AssistantChat }) {
           <h2 id="ai-title">Ask about<br /><em>the world’s water.</em></h2>
           <p>Ask about any country or territory, a continent, or the world. The assistant reads the same annual water, climate and projection records shown in <a href="#global">Global water</a> and <a href="#future">Future</a>.</p>
           <div className="ai-facts">
-            <div><h3>Data it can read</h3><ul><li>Annual Landsat water area, 1984–2018, for 266 countries and territories</li><li>Rain and heat records, El Niño, and Bayesian estimates through 2030</li><li>Country, continent and whole-world records, where data are available</li></ul></div>
+            <div><h3>Data it can read</h3><ul><li>Annual Landsat water area, 1984–2018, for 266 countries and territories</li><li>Rain and heat records, El Niño, and Bayesian estimates through 2030</li><li>Country, continent and whole-world records; local Okavango observations</li></ul></div>
             <div><h3>How to read an answer</h3><ul><li>Check the year, units and source behind each number</li><li>Separate satellite measurements from model projections</li><li>Use the Radar layers to inspect available imagery</li></ul></div>
           </div>
         </div>

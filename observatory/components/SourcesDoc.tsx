@@ -71,7 +71,7 @@ function Pages({ sum, ridge }: { sum: Summary | null; ridge: RidgeResearch }) {
             <li><b>Graphics</b> — measured solid, projected dashed to 2030; permanent vs seasonal; rain → water; a check against UNEP after 2018.</li>
             <li><b>Future</b> — the reader picks place, causes, data treatment and years; the engine refits and answers, with a world probability map.</li>
             <li><b>What should be done</b> — where mapped water declined, associated inputs and monitoring options.</li>
-            <li><b>AI</b> — a data-grounded assistant for countries, continents and the world.</li>
+            <li><b>AI</b> — a data-grounded assistant for countries, continents and the world, with a separate Okavango observation record.</li>
             <li><b>Sources</b> — this document.</li>
           </ol>
           <h3>Reading the radar</h3>
@@ -115,11 +115,12 @@ function Pages({ sum, ridge }: { sum: Summary | null; ridge: RidgeResearch }) {
             <li><b>Copernicus ERA5</b> yearly precipitation and temperature anomaly by country, processed by Our World in Data (ourworldindata.org).</li>
             <li><b>NOAA CPC Oceanic Niño Index</b> (cpc.ncep.noaa.gov).</li>
             <li><b>Natural Earth</b> borders and labels · <b>Esri</b> and <b>OpenStreetMap</b> base maps.</li>
+            <li><b>EDev-Vision Okavango case study</b> — local NISAR radar and Landsat optical observations (github.com/Asadgnc/edev-data).</li>
           </ul>
           <h3>Use of AI</h3>
           <ul className="doc-bullets">
-            <li><b>Claude Code (Anthropic) and OpenAI Codex</b> — helped write and review the data scripts, engine, website and documentation. Site measurements and model estimates come from published project code and the data above.</li>
-            <li><b>OpenAI language-model assistant</b> — the website selects matching world, continent or country records from the same data and engine used by its charts, then sends those records to a server-side model. Its source includes 266 countries and territories, 1984–2018 annual water, climate inputs and Bayesian projections through 2030. Missing records are reported as missing; answers can be wrong and should be checked against the charts.</li>
+            <li><b>Claude Code (Anthropic) and OpenAI Codex</b> — helped write and review scripts, engine, site and documentation. Measurements and estimates come from project code and cited data.</li>
+            <li><b>OpenAI language-model assistant</b> — a server-side model receives relevant country, continent or world records: annual water (1984–2018), climate and Bayesian estimates to 2030. Okavango questions use a separate local observation record. Answers may be wrong; check them against the charts.</li>
             <li>The opening film is an <b>AI-generated decorative sequence</b>, not mission data. No NASA logo or insignia is used.</li>
           </ul>
         </section>

@@ -1,10 +1,12 @@
 import context from '@/public/data/world-context.json';
+import okavango from '@/public/data/okavango-context.json';
 
 type Place = (typeof context.places)[keyof typeof context.places];
 type Turn = { role: 'user' | 'assistant'; content: string };
 const places = Object.entries(context.places) as [string, Place][];
 const aliases: Record<string, string> = {
   usa: 'United States of America', 'united states': 'United States of America',
+  world: 'The whole world', global: 'The whole world',
   uk: 'U.K. of Great Britain and Northern Ireland',
   turkiye: 'Turkey',
 };
@@ -38,18 +40,23 @@ function mentioned(text: string) {
 export function evidenceFor(turns: Turn[]) {
   const latest = turns.at(-1)?.content ?? '';
   let keys = mentioned(latest);
+  let delta = /\bokavango\b/i.test(latest);
+  if (delta && !keys.length) keys = [places.find(([, p]) => p.name === 'Botswana')?.[0] ?? 'gworld'];
   if (!keys.length) {
     for (const turn of turns.slice(0, -1).reverse()) {
       if (turn.role !== 'user') continue;
+      if (/\bokavango\b/i.test(turn.content)) delta = true;
       keys = mentioned(turn.content);
       if (keys.length) break;
     }
   }
+  if (delta && !keys.length) keys = [places.find(([, p]) => p.name === 'Botswana')?.[0] ?? 'gworld'];
   if (!keys.length) keys = ['gworld'];
   return {
     names: keys.map(key => context.places[key as keyof typeof context.places].name),
     records: keys.map(key => ({ key, ...context.places[key as keyof typeof context.places] })),
     oni_dec_feb: context.oni_dec_feb,
     oni_latest: context.oni_latest,
+    ...(delta ? { okavango_case_study: okavango } : {}),
   };
 }

@@ -1,8 +1,8 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';
 import { contains } from '@/lib/countryGeometry';
-import { createWorldMap, setSelected, showView, STEPS, LANDSAT_YEARS, VIEW, VIEWS, daysFor, type ViewId } from '@/lib/gibs';
+import { createWorldMap, setSelected, showView, stepsFor, LANDSAT_YEARS, VIEW, VIEWS, daysFor, type ViewId } from '@/lib/gibs';
 import { climateAt, km, oniAt, pctText, placeBounds, rainAnomaly, selected, series, usable, mean, type Selection, type World } from '@/lib/world';
 import { sectionNumber } from '@/lib/sections';
 import PlacePicker from './PlacePicker';
@@ -18,8 +18,15 @@ const fmtDate = (d: string, year = false) => new Date(`${d}T00:00:00Z`).toLocale
 export default function WorldRadar({ world, selection, onSelect }: { world: World | null; selection: Selection; onSelect: (s: Selection) => void }) {
   const host = useRef<HTMLDivElement>(null), map = useRef<MLMap | null>(null);
   const [ready, setReady] = useState(false), [failed, setFailed] = useState(false), [loading, setLoading] = useState(false);
-  const [viewId, setViewId] = useState<ViewId>('nisar'), [step, setStep] = useState(STEPS.length - 4), [year, setYear] = useState(2021), [opacity, setOpacity] = useState(.95), [playing, setPlaying] = useState(false);
-  const view = VIEW[viewId], date = STEPS[step];
+  const [viewId, setViewId] = useState<ViewId>('s1water'), [step, setStep] = useState(999), [year, setYear] = useState(2021), [opacity, setOpacity] = useState(.95), [playing, setPlaying] = useState(false);
+  const view = VIEW[viewId];
+  const steps = useMemo(() => stepsFor(view), [view]);
+  const stepIdx = Math.min(step, steps.length - 1), date = steps[stepIdx];
+  // When the layer changes, jump the timeline to that layer's most recent step.
+  useEffect(() => { setStep(steps.length - 1); }, [viewId]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Keep the selected step in view on the (sometimes long) timeline strip.
+  const strip = useRef<HTMLDivElement>(null);
+  useEffect(() => { const sc = strip.current, el = sc?.querySelector<HTMLElement>('.strip-date.selected'); if (sc && el && sc.scrollWidth > sc.clientWidth) sc.scrollLeft = el.offsetLeft - sc.clientWidth / 2; }, [stepIdx, viewId, year]);
   const worldRef = useRef(world); worldRef.current = world;
   const selRef = useRef(selection); selRef.current = selection;
   const onSelectRef = useRef(onSelect); onSelectRef.current = onSelect;
@@ -54,9 +61,9 @@ export default function WorldRadar({ world, selection, onSelect }: { world: Worl
   // Play: one 12-day step (or one year) every 2.6 s, so the tiles have time to arrive.
   useEffect(() => {
     if (!playing) return;
-    const id = setTimeout(() => { if (view.kind === 'year') setYear(y => (y >= 2021 ? 1984 : y + 1)); else setStep(s => (s + 1) % STEPS.length); }, 2600);
+    const id = setTimeout(() => { if (view.kind === 'year') setYear(y => (y >= 2021 ? 1984 : y + 1)); else setStep(s => (Math.min(s, steps.length - 1) + 1) % steps.length); }, 2600);
     return () => clearTimeout(id);
-  }, [playing, step, year, view.kind]);
+  }, [playing, step, year, view.kind, steps.length]);
 
   const days = view.kind === 'date' ? daysFor(view, date) : [];
   const yearOfDate = view.kind === 'year' ? year : Number(date.slice(0, 4));
@@ -69,7 +76,7 @@ export default function WorldRadar({ world, selection, onSelect }: { world: Worl
   const landsatHere = place && world && view.kind === 'year' && year <= 2018 ? series(place, world.years)[world.years.indexOf(year)] : null;
 
   return <section className="observatory-section world-radar" id="observatory" aria-labelledby="radar-title"><div className="wrap">
-    <div className="section-heading"><div><div className="eyebrow"><span className="section-number">{sectionNumber('observatory')}</span> ALL-IN-ONE RADAR · THE WHOLE EARTH</div><h2 id="radar-title">Seven views of the Earth.<br /><em>One map.</em></h2><p className="section-description observatory-lede">From the whole planet to any wetland: NASA–ISRO NISAR radar and six more NASA and JRC views of water, for any 12-day NISAR cycle since November 2025 and any year since 1984.</p></div><div className="feed-badge connected" role="status"><span />7 live layers · NASA GIBS + JRC</div></div>
+    <div className="section-heading"><div><div className="eyebrow"><span className="section-number">{sectionNumber('observatory')}</span> ALL-IN-ONE RADAR · THE WHOLE EARTH</div><h2 id="radar-title">Seven views of the Earth.<br /><em>One map.</em></h2><p className="section-description observatory-lede">From the whole planet to any wetland: NASA–ISRO NISAR radar and six more NASA and JRC views of water, each across its own record — NISAR 12-day cycles since 2025, radar and optical water, floods, daily rain back to 2000 and JRC years from 1984.</p></div><div className="feed-badge connected" role="status"><span />7 live layers · NASA GIBS + JRC</div></div>
     <div className="observatory-workspace">
       <div className="wr-layers" role="radiogroup" aria-label="Map layer">
         {VIEWS.map((v, i) => <button key={v.id} type="button" role="radio" aria-checked={viewId === v.id} className={viewId === v.id ? 'active' : ''} onClick={() => { setPlaying(false); setViewId(v.id); }}><span>{String(i + 1).padStart(2, '0')}</span><strong>{v.label}</strong><small>{v.best.replace('Best for ', '')}</small></button>)}
@@ -99,13 +106,13 @@ export default function WorldRadar({ world, selection, onSelect }: { world: Worl
         </aside>
       </div>
       <div className="map-bottom"><div className="legend">{view.legend.length ? view.legend.map(l => <span key={l.label}><i style={{ background: l.color }} />{l.label}</span>) : <span>True-colour photo · context, not a water measurement</span>}</div><label className="opacity-control">Opacity <input aria-label="Layer opacity" type="range" min="15" max="100" value={Math.round(opacity * 100)} onChange={e => setOpacity(+e.target.value / 100)} /><b>{Math.round(opacity * 100)}%</b></label></div>
-      <div className="acquisition-strip"><div className="strip-heading"><span>{view.kind === 'year' ? 'LANDSAT HISTORY / 1984–2021' : 'NISAR 12-DAY CYCLES / NOV 2025 – NOV 2026'}</span><strong>{playing ? 'Playing' : 'Select a step'}</strong></div>
-        <div className="strip-scroll"><div className="strip-track">
-          <div className="strip-progress" style={{ width: `calc((100% - 65px) * ${view.kind === 'year' ? LANDSAT_YEARS.indexOf(year) / (LANDSAT_YEARS.length - 1) : step / (STEPS.length - 1)})` }} />
+      <div className="acquisition-strip"><div className="strip-heading"><span>{view.kind === 'year' ? 'LANDSAT HISTORY / 1984–2021' : `${view.label.toUpperCase()} / ${fmtDate(steps[0], true)} – ${fmtDate(steps.at(-1)!, true)}`}</span><strong>{playing ? 'Playing' : 'Select a step'}</strong></div>
+        <div className="strip-scroll" ref={strip}><div className="strip-track">
+          <div className="strip-progress" style={{ width: `calc((100% - 65px) * ${view.kind === 'year' ? LANDSAT_YEARS.indexOf(year) / (LANDSAT_YEARS.length - 1) : steps.length > 1 ? stepIdx / (steps.length - 1) : 0})` }} />
           {view.kind === 'year' ? LANDSAT_YEARS.map(y => <button key={y} className={`strip-date ${year === y ? 'selected' : ''}`} onClick={() => { setPlaying(false); setYear(y); }} aria-current={year === y ? 'step' : undefined}><i /><span>{y}</span></button>)
-            : STEPS.map((d, i) => <button key={d} className={`strip-date ${step === i ? 'selected' : ''}`} onClick={() => { setPlaying(false); setStep(i); }} aria-label={`Show the 12 days up to ${fmtDate(d, true)}`} aria-current={step === i ? 'step' : undefined}><i /><span>{fmtDate(d)}</span></button>)}
+            : steps.map((d, i) => <button key={d} className={`strip-date ${stepIdx === i ? 'selected' : ''}`} onClick={() => { setPlaying(false); setStep(i); }} aria-label={`Show ${view.window && view.window > 1 ? `the ${view.window} days up to` : ''} ${fmtDate(d, true)}`} aria-current={stepIdx === i ? 'step' : undefined}><i /><span>{fmtDate(d)}</span></button>)}
         </div></div>
-        <div className="strip-foot"><span>{view.kind === 'year' ? '1984 — 2021' : `${fmtDate(STEPS[0], true)} — ${fmtDate(STEPS.at(-1)!, true)}`}</span><span>{view.kind === 'year' ? 'One classified map per year' : 'Each step = the 12 days of one NISAR orbit cycle'}</span></div>
+        <div className="strip-foot"><span>{view.kind === 'year' ? '1984 — 2021' : `${fmtDate(steps[0], true)} — ${fmtDate(steps.at(-1)!, true)}`}</span><span>{view.kind === 'year' ? 'One classified map per year' : view.id === 'nisar' ? 'Each step = the 12 days of one NISAR orbit cycle' : view.window && view.window > 1 ? `Each step stacks the ${view.window} days up to that date` : 'Each step = one day · one step a month across the record'}</span></div>
       </div>
       <div className="wr-explain"><div><span className="eyebrow">WHAT IT SHOWS</span><p>{view.what}.</p><p className="wr-best">{view.best}.</p></div><div><span className="eyebrow">HOW TO READ IT</span><ul>{view.more.map(t => <li key={t}>{t}</li>)}</ul></div><div><span className="eyebrow">TECHNICAL</span><ul>{view.tech.map(t => <li key={t}>{t}</li>)}</ul><a href={view.sourceUrl} target="_blank" rel="noreferrer">{view.source} ↗</a></div></div>
     </div>

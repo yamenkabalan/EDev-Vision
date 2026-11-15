@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';
-import { createWorldMap, setSelected, showView, STEPS, LANDSAT_YEARS, VIEW, type ViewId } from '@/lib/gibs';
+import { createWorldMap, setSelected, showView, stepsFor, LANDSAT_YEARS, VIEW, type ViewId } from '@/lib/gibs';
 import { km, placeBounds, rainAnomaly, selected, series, type Selection, type World } from '@/lib/world';
 import { sectionNumber } from '@/lib/sections';
 import PlacePicker from './PlacePicker';
@@ -11,7 +11,7 @@ import PlacePicker from './PlacePicker';
   maps share one camera; the top one is cut at the divider. Sources: Landsat
   years (1984-2021), NISAR radar or radar water for two 12-day cycles.
 */
-const SOURCES: { id: ViewId; label: string }[] = [{ id: 'landsat', label: 'Landsat history (1984–2021)' }, { id: 'nisar', label: 'NISAR radar 2025–2026' }, { id: 's1water', label: 'Radar water 2025–2026' }];
+const SOURCES: { id: ViewId; label: string }[] = [{ id: 'landsat', label: 'Landsat history (1984–2021)' }, { id: 'nisar', label: 'NISAR radar (2025–now)' }, { id: 's1water', label: 'Radar water (2024–now)' }];
 const fmt = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 export default function WorldCompare({ world, selection, onSelect }: { world: World | null; selection: Selection; onSelect: (s: Selection) => void }) {
@@ -47,7 +47,7 @@ export default function WorldCompare({ world, selection, onSelect }: { world: Wo
 
   const chooseSource = (id: ViewId) => {
     setSource(id);
-    if (id === 'landsat') { setA('2000'); setB('2018'); } else { setA(STEPS[STEPS.length - 13]); setB(STEPS[STEPS.length - 1]); }
+    if (id === 'landsat') { setA('2000'); setB('2018'); } else { const steps = stepsFor(VIEW[id]); setA(steps[Math.max(0, steps.length - 13)]); setB(steps.at(-1)!); }
   };
   const drag = (e: ReactPointerEvent) => {
     const el = frame.current; if (!el) return;
@@ -56,7 +56,7 @@ export default function WorldCompare({ world, selection, onSelect }: { world: Wo
     const onMove = (ev: PointerEvent) => move(ev.clientX), up = () => { removeEventListener('pointermove', onMove); removeEventListener('pointerup', up); };
     addEventListener('pointermove', onMove); addEventListener('pointerup', up);
   };
-  const options = view.kind === 'year' ? LANDSAT_YEARS.map(y => <option key={y} value={y}>{y}{y > 2018 ? ' · map only' : ''}</option>) : STEPS.map(d => <option key={d} value={d}>{fmt(d)}</option>);
+  const options = view.kind === 'year' ? LANDSAT_YEARS.map(y => <option key={y} value={y}>{y}{y > 2018 ? ' · map only' : ''}</option>) : stepsFor(view).map(d => <option key={d} value={d}>{fmt(d)}</option>);
   const yA = view.kind === 'year' ? +a : +a.slice(0, 4), yB = view.kind === 'year' ? +b : +b.slice(0, 4);
   const pA = place && world && yA <= 2018 ? series(place, world.years)[world.years.indexOf(yA)] : null, pB = place && world && yB <= 2018 ? series(place, world.years)[world.years.indexOf(yB)] : null;
   const diff = pA?.value != null && pB?.value != null ? pB.value - pA.value : null;

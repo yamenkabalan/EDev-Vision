@@ -14,21 +14,22 @@ type Recolour = 'hls' | 's1' | 'flood' | 'none';
 export type ViewDef = {
   id: ViewId; label: string; what: string; best: string; more: string[]; tech: string[];
   kind: 'date' | 'year'; layer?: string; ext?: 'png' | 'jpg'; level?: number; window?: number; recolour?: Recolour;
-  first?: string; last?: string; legend: { label: string; color: string }[]; source: string; sourceUrl: string;
+  first?: string; last?: string; gaps?: [string, string][]; legend: { label: string; color: string }[]; source: string; sourceUrl: string;
 };
 
 export const VIEWS: ViewDef[] = [
   {
-    id: 'nisar', label: 'NISAR radar', kind: 'date', layer: 'NISAR_L2_Geocoded_Polarimetric_Covariance', ext: 'png', level: 13, window: 12, recolour: 'none', first: '2025-10-29', last: '2026-11-12',
+    id: 'nisar', label: 'NISAR radar', kind: 'date', layer: 'NISAR_L2_Geocoded_Polarimetric_Covariance', ext: 'png', level: 13, window: 12, recolour: 'none', first: '2025-10-29', last: '2026-11-13',
+    gaps: [['2026-03-02', '2026-03-03'], ['2026-03-30', '2026-03-31'], ['2026-04-13', '2026-04-13'], ['2026-07-28', '2026-08-09']],
     what: 'NASA–ISRO NISAR L-band radar: one full 12-day orbit cycle stacked into one picture of the Earth',
     best: 'Best for seeing what radar sees through clouds, day or night',
-    more: ['Each strip is one orbit pass. Twelve days of passes cover nearly all land.', 'Dark tones are smooth surfaces such as calm open water; bright tones are rough ground, forest and flooded vegetation.'],
+    more: ['Each strip is one orbit pass. Twelve days of passes cover nearly all land.', 'NISAR launched in 2025 and its public coverage is still growing: for many regions (including Türkiye) the first full passes arrive from mid-2026, so earlier dates can look empty. Use Radar water for a complete record.', 'Dark tones are smooth surfaces such as calm open water; bright tones are rough ground, forest and flooded vegetation.'],
     tech: ['NISAR L2 GCOV browse imagery (HH/HV colour rendering by NASA), via NASA GIBS.', 'Up to 12 daily layers drawn on top of each other, newest on top.'],
     legend: [{ label: 'Smooth / open water (dark)', color: '#16324a' }, { label: 'Vegetation, rough ground (bright)', color: '#a7c94a' }],
     source: 'NASA–ISRO NISAR · NASA GIBS', sourceUrl: 'https://nisar.jpl.nasa.gov/',
   },
   {
-    id: 's1water', label: 'Radar water', kind: 'date', layer: 'OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1', ext: 'png', level: 12, window: 12, recolour: 's1', first: '2023-12-15', last: '2026-11-14',
+    id: 's1water', label: 'Radar water', kind: 'date', layer: 'OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1', ext: 'png', level: 12, window: 12, recolour: 's1', first: '2024-08-21', last: '2026-11-15',
     what: 'NASA OPERA water map from Sentinel-1 radar: open water in blue and water hidden under vegetation in green',
     best: 'Best for finding water under plants and clouds',
     more: ['Radar sees open water as dark and flooded vegetation as very bright (double bounce).', 'Blank areas were not imaged in this 12-day window or are masked (steep terrain, radar shadow). Sea inside a radar strip is also drawn as open water.'],
@@ -55,7 +56,7 @@ export const VIEWS: ViewDef[] = [
     source: 'NASA LANCE VIIRS flood · NASA GIBS', sourceUrl: 'https://www.earthdata.nasa.gov/data/instruments/viirs/near-real-time-data/nrt-global-flood-products',
   },
   {
-    id: 'rain', label: 'Rain', kind: 'date', layer: 'IMERG_Precipitation_Rate', ext: 'png', level: 6, window: 1, recolour: 'none', first: '2000-06-01', last: '2026-11-13',
+    id: 'rain', label: 'Rain', kind: 'date', layer: 'IMERG_Precipitation_Rate', ext: 'png', level: 6, window: 1, recolour: 'none', first: '2000-06-01', last: '2026-11-13', gaps: [['2025-10-23', '2025-10-29']],
     what: 'NASA GPM IMERG rain rate for that day: the cause behind most changes in surface water',
     best: 'Best for seeing where the water comes from',
     more: ['Rain today becomes river water, lakes and floods days to months later.', 'Green is light rain, red and purple heavy rain.'],
@@ -84,20 +85,40 @@ export const VIEWS: ViewDef[] = [
 ];
 export const VIEW = Object.fromEntries(VIEWS.map(v => [v.id, v])) as Record<ViewId, ViewDef>;
 
-/** The NISAR 12-day cycle: one step every 12 days, ending at the last published NISAR date. */
-export const LAST_STEP = '2026-11-12';
 const DAY = 864e5;
 export const iso = (t: number) => new Date(t).toISOString().slice(0, 10);
-export const STEPS: string[] = Array.from({ length: 32 }, (_, i) => iso(Date.parse(LAST_STEP) - (31 - i) * 12 * DAY));
 export const LANDSAT_YEARS = Array.from({ length: 2021 - 1984 + 1 }, (_, i) => 1984 + i);
-/** NISAR published nothing between these dates (GIBS time domain). */
-const NISAR_GAP: [string, string] = ['2026-07-28', '2026-08-09'];
+
+/** True when a day falls inside one of the view's known no-data gaps. */
+const inGap = (view: ViewDef, day: string) => !!view.gaps?.some(([a, b]) => day >= a && day <= b);
+
+/**
+ * The timeline each date view offers, oldest first and covering the view's
+ * whole life — not one shared Nov-2025→Nov-2026 strip. NISAR keeps its real
+ * 12-day orbit cadence; every other layer gets one step a month (thinned so a
+ * long record such as rain, 2000→now, stays a short, scrollable strip).
+ */
+export function stepsFor(view: ViewDef): string[] {
+  const first = Date.parse(view.first!), last = Date.parse(view.last!);
+  if (view.id === 'nisar') {
+    const out: string[] = [];
+    for (let t = last; t >= first; t -= 12 * DAY) out.unshift(iso(t));
+    return out;
+  }
+  const fy = new Date(first).getUTCFullYear(), fm = new Date(first).getUTCMonth();
+  const months = (new Date(last).getUTCFullYear() - fy) * 12 + (new Date(last).getUTCMonth() - fm);
+  const stride = Math.max(1, Math.ceil((months + 1) / 72));
+  const out: string[] = [];
+  for (let m = months; m >= 0; m -= stride) out.unshift(iso(Math.min(last, Math.max(first, Date.UTC(fy, fm + m, 15)))));
+  if (out.at(-1) !== iso(last)) out.push(iso(last));
+  return out.filter((d, i, a) => a.indexOf(d) === i);
+}
 
 /** The days drawn for a view at a step date, oldest first. */
 export function daysFor(view: ViewDef, date: string): string[] {
   const n = view.window || 1, end = Date.parse(date) > Date.parse(view.last!) ? view.last! : date;
   return Array.from({ length: n }, (_, i) => iso(Date.parse(end) - (n - 1 - i) * DAY))
-    .filter(d => d >= view.first! && d <= view.last! && !(view.id === 'nisar' && d >= NISAR_GAP[0] && d <= NISAR_GAP[1]));
+    .filter(d => d >= view.first! && d <= view.last! && !inGap(view, d));
 }
 
 export function tileURL(view: ViewDef, day: string) {

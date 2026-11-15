@@ -5,6 +5,7 @@ import { createWorldMap, setSelected, showView, STEPS, LANDSAT_YEARS, VIEW, type
 import { km, placeBounds, rainAnomaly, selected, series, type Selection, type World } from '@/lib/world';
 import { sectionNumber } from '@/lib/sections';
 import PlacePicker from './PlacePicker';
+import { useMapVisibility } from '@/lib/useMapVisibility';
 
 /*
   04 · Compare: the same place at two moments, anywhere on Earth. Two MapLibre
@@ -17,6 +18,7 @@ const fmt = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-GB'
 export default function WorldCompare({ world, selection, onSelect }: { world: World | null; selection: Selection; onSelect: (s: Selection) => void }) {
   const leftHost = useRef<HTMLDivElement>(null), rightHost = useRef<HTMLDivElement>(null), frame = useRef<HTMLDivElement>(null);
   const maps = useRef<MLMap[]>([]);
+  const { started, active } = useMapVisibility(leftHost);
   const [ready, setReady] = useState(0), [failed, setFailed] = useState(false);
   const [source, setSource] = useState<ViewId>('landsat');
   const [a, setA] = useState('2000'), [b, setB] = useState('2018');
@@ -24,9 +26,9 @@ export default function WorldCompare({ world, selection, onSelect }: { world: Wo
   const view = VIEW[source];
 
   useEffect(() => {
-    if (!leftHost.current || !rightHost.current) return;
+    if (!started || !leftHost.current || !rightHost.current) return;
     const l = createWorldMap(leftHost.current, { center: [20, 8], zoom: 1.3 }), r = createWorldMap(rightHost.current, { center: [20, 8], zoom: 1.3 });
-    if (!l || !r) { setFailed(true); return; }
+    if (!l || !r) { l?.remove(); r?.remove(); setFailed(true); return; }
     maps.current = [l, r];
     let syncing = false;
     const sync = (from: MLMap, to: MLMap) => () => { if (syncing) return; syncing = true; to.jumpTo({ center: from.getCenter(), zoom: from.getZoom(), bearing: from.getBearing(), pitch: from.getPitch() }); syncing = false; };
@@ -34,16 +36,19 @@ export default function WorldCompare({ world, selection, onSelect }: { world: Wo
     l.on('load', () => setReady(n => n + 1)); r.on('load', () => setReady(n => n + 1));
     const resize = new ResizeObserver(() => { l.resize(); r.resize(); }); resize.observe(leftHost.current);
     return () => { resize.disconnect(); l.remove(); r.remove(); maps.current = []; };
-  }, []);
+  }, [started]);
 
   const both = ready >= 2;
-  useEffect(() => { if (!both) return; const [l, r] = maps.current; showView(l, view, view.kind === 'year' ? +a : a, .95); showView(r, view, view.kind === 'year' ? +b : b, .95); }, [both, view, a, b]);
+  useEffect(() => { if (!both || !active) return; const [l, r] = maps.current; showView(l, view, view.kind === 'year' ? +a : a, .95); showView(r, view, view.kind === 'year' ? +b : b, .95); }, [both, active, view, a, b]);
+  const lastFocused = useRef<string | null>(null);
   const place = world ? selected(world, selection)[0] : null;
   useEffect(() => {
-    if (!both || !place) return;
+    if (!both || !active || !place) return;
+    if (lastFocused.current === place.key) return;
+    lastFocused.current = place.key;
     for (const m of maps.current) setSelected(m, (place.geometry as GeoJSON.Geometry) ?? null);
     maps.current[1].fitBounds(placeBounds(place), { padding: 50, maxZoom: 7, duration: 900 });
-  }, [both, place?.key]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [both, active, place?.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const chooseSource = (id: ViewId) => {
     setSource(id);

@@ -48,7 +48,7 @@ const style: StyleSpecification = {
     { id: 'earth-overview', type: 'raster', source: 'earth-overview', maxzoom: 4.5, paint: { 'raster-opacity': ['interpolate', ['linear'], ['zoom'], 0, 1, 3.5, 1, 4.5, 0], 'raster-fade-duration': 0 } },
     { id: 'satellite', type: 'raster', source: 'satellite', paint: { 'raster-fade-duration': 120 } },
     { id: 'streets', type: 'raster', source: 'streets', layout: { visibility: 'none' }, paint: { 'raster-fade-duration': 120 } },
-    { id: 'dark', type: 'raster', source: 'dark', paint: { 'raster-fade-duration': 120, 'raster-brightness-max': .3, 'raster-saturation': -1 } },
+    { id: 'dark', type: 'raster', source: 'dark', layout: { visibility: 'none' }, paint: { 'raster-fade-duration': 120, 'raster-brightness-max': .3, 'raster-saturation': -1 } },
     { id: 'annual', type: 'raster', source: 'annual', paint: { 'raster-opacity': .95, 'raster-fade-duration': 0, 'raster-resampling': 'nearest' } },
     { id: 'places', type: 'raster', source: 'places', minzoom: 3, paint: { 'raster-opacity': .9, 'raster-fade-duration': 100 } },
     { id: 'physical', type: 'symbol', source: 'physical', minzoom: 4, layout: { 'text-field': ['get', 'name'], 'text-font': ['Open Sans Regular'], 'text-size': ['interpolate', ['linear'], ['zoom'], 4, 10, 8, 13], 'text-max-width': 12, 'text-allow-overlap': false, 'symbol-sort-key': ['get', 'rank'] }, paint: { 'text-color': '#d9eac7', 'text-halo-color': '#102b2d', 'text-halo-width': 1.5, 'text-opacity': ['step', ['zoom'], 0, 4, ['case', ['<=', ['get', 'minZoom'], 4], 1, 0], 5, ['case', ['<=', ['get', 'minZoom'], 5], 1, 0], 6, ['case', ['<=', ['get', 'minZoom'], 6], 1, 0], 7, 1] } },
@@ -70,7 +70,7 @@ export default function UnifiedGlobeMap({ regions, primary, secondary, focusRegi
   const onPickRef = useRef(onPick);
   regionsRef.current = regions;
   onPickRef.current = onPick;
-  const [basemap, setBasemap] = useState<Basemap>('water');
+  const [basemap, setBasemap] = useState<Basemap>('satellite');
   const [zoom, setZoom] = useState(initialZoom);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
@@ -83,7 +83,7 @@ export default function UnifiedGlobeMap({ regions, primary, secondary, focusRegi
     const m = new maplibregl.Map({
       container: host.current,
       style,
-      center: [21, -6],
+      center: primary.focus ?? [21, -6],
       zoom: initialZoom,
       minZoom: .6,
       maxZoom: 18,
@@ -93,7 +93,8 @@ export default function UnifiedGlobeMap({ regions, primary, secondary, focusRegi
       touchPitch: false,
       attributionControl: false,
       fadeDuration: 120,
-      maxTileCacheSize: 48,
+      maxTileCacheSize: 80,
+      pixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
       canvasContextAttributes: { powerPreference: 'high-performance' },
     });
     map.current = m;

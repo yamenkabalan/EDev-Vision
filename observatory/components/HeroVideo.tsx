@@ -70,8 +70,8 @@ export default function HeroVideo({ reduced, onFailure, onPhase, resumeSignal }:
     const v = video.current;
     if (!v || !src) return;
     v.muted = true;
-    v.playbackRate = 1.3;
-    v.defaultPlaybackRate = 1.3;
+    v.playbackRate = 1.5;
+    v.defaultPlaybackRate = 1.5;
     v.play().then(() => {
       if (phaseRef.current === 'loading') setPhase('playing');
       else if (phaseRef.current !== 'playing') v.pause();
@@ -96,7 +96,7 @@ export default function HeroVideo({ reduced, onFailure, onPhase, resumeSignal }:
   useEffect(() => {
     const v = video.current;
     if (!resumeSignal || !v || phaseRef.current !== 'paused') return;
-    v.playbackRate = 1.3;
+    v.playbackRate = 1.5;
     v.play().then(() => setPhase('playing')).catch(() => {});
   }, [resumeSignal]);
 

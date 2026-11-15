@@ -40,14 +40,14 @@ export default function Experience(){
   const [world,setWorld]=useState<World|null>(null);
   useEffect(()=>{
     let live=true;
-    const section=document.getElementById('global');
-    if(!section){loadWorld().then(w=>{if(live)setWorld(w);}).catch(()=>{});return()=>{live=false;};}
-    const observer=new IntersectionObserver(([entry])=>{
-      if(!entry.isIntersecting)return;
+    const sections=Array.from(document.querySelectorAll('#global, #observatory, #compare, #history, #graphics, #future, #solutions'));
+    if(!sections.length){loadWorld().then(w=>{if(live)setWorld(w);}).catch(()=>{});return()=>{live=false;};}
+    const observer=new IntersectionObserver(entries=>{
+      if(!entries.some(entry=>entry.isIntersecting))return;
       observer.disconnect();
       loadWorld().then(w=>{if(live)setWorld(w);}).catch(()=>{});
     },{rootMargin:'0px'});
-    observer.observe(section);
+    sections.forEach(section=>observer.observe(section));
     return()=>{live=false;observer.disconnect();};
   },[]);
   // The place chosen in one section follows the reader down the page.

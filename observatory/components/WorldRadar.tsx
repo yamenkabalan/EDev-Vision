@@ -6,6 +6,7 @@ import { createWorldMap, setSelected, showView, STEPS, LANDSAT_YEARS, VIEW, VIEW
 import { climateAt, km, oniAt, pctText, placeBounds, rainAnomaly, selected, series, usable, mean, type Selection, type World } from '@/lib/world';
 import { sectionNumber } from '@/lib/sections';
 import PlacePicker from './PlacePicker';
+import { useMapVisibility } from '@/lib/useMapVisibility';
 
 /*
   03 · All-in-one radar, now for the whole Earth: one MapLibre globe, seven
@@ -17,6 +18,7 @@ const fmtDate = (d: string, year = false) => new Date(`${d}T00:00:00Z`).toLocale
 
 export default function WorldRadar({ world, selection, onSelect }: { world: World | null; selection: Selection; onSelect: (s: Selection) => void }) {
   const host = useRef<HTMLDivElement>(null), map = useRef<MLMap | null>(null);
+  const { started, active } = useMapVisibility(host);
   const [ready, setReady] = useState(false), [failed, setFailed] = useState(false), [loading, setLoading] = useState(false);
   const [viewId, setViewId] = useState<ViewId>('nisar'), [step, setStep] = useState(STEPS.length - 4), [year, setYear] = useState(2021), [opacity, setOpacity] = useState(.95), [playing, setPlaying] = useState(false);
   const view = VIEW[viewId], date = STEPS[step];
@@ -25,7 +27,7 @@ export default function WorldRadar({ world, selection, onSelect }: { world: Worl
   const onSelectRef = useRef(onSelect); onSelectRef.current = onSelect;
 
   useEffect(() => {
-    if (!host.current) return;
+    if (!started || !host.current) return;
     const m = createWorldMap(host.current, { center: [20, 8], zoom: 1.3 });
     if (!m) { setFailed(true); return; }
     map.current = m;
@@ -39,24 +41,27 @@ export default function WorldRadar({ world, selection, onSelect }: { world: Worl
     });
     const resize = new ResizeObserver(() => m.resize()); resize.observe(host.current);
     return () => { resize.disconnect(); m.remove(); map.current = null; };
-  }, []);
+  }, [started]);
 
-  useEffect(() => { if (ready && map.current) showView(map.current, view, view.kind === 'year' ? year : date, opacity); }, [ready, view, date, year, opacity]);
+  useEffect(() => { if (active && ready && map.current) showView(map.current, view, view.kind === 'year' ? year : date, opacity); }, [active, ready, view, date, year, opacity]);
 
+  const lastFocused = useRef<string | null>(null);
   const place = world ? selected(world, selection)[0] : null;
   useEffect(() => {
-    const m = map.current; if (!m || !ready || !place) return;
+    const m = map.current; if (!active || !m || !ready || !place) return;
+    if (lastFocused.current === place.key) return;
+    lastFocused.current = place.key;
     setSelected(m, (place.geometry as GeoJSON.Geometry) ?? null);
     const mobile = window.matchMedia('(max-width: 700px)').matches;
     m.fitBounds(placeBounds(place), { padding: mobile ? 30 : 60, maxZoom: 7, duration: 1000 });
-  }, [place?.key, ready]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [place?.key, ready, active]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Play: one 12-day step (or one year) every 2.6 s, so the tiles have time to arrive.
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || !active || loading) return;
     const id = setTimeout(() => { if (view.kind === 'year') setYear(y => (y >= 2021 ? 1984 : y + 1)); else setStep(s => (s + 1) % STEPS.length); }, 2600);
     return () => clearTimeout(id);
-  }, [playing, step, year, view.kind]);
+  }, [playing, active, loading, step, year, view.kind]);
 
   const days = view.kind === 'date' ? daysFor(view, date) : [];
   const yearOfDate = view.kind === 'year' ? year : Number(date.slice(0, 4));
@@ -85,7 +90,7 @@ export default function WorldRadar({ world, selection, onSelect }: { world: Worl
           {world ? <PlacePicker world={world} value={selection.mode === 'compare' ? { ...selection, mode: 'country' } : selection} onChange={onSelect} allowCompare={false} compact /> : <p className="stats-note">Loading the world record…</p>}
           {place && <>
             <h3 className="wr-place">{place.name}</h3>
-            {view.kind === 'year' && <div className="metric water"><span><i />Landsat water, {year}</span><strong>{landsatHere?.value ? km(landsatHere.value) : '—'}</strong><small>{year > 2018 ? 'country totals end in 2018 · map continues to 2021' : landsatHere?.low ? 'km² · lower bound: few clear images' : 'km² permanent + seasonal'}</small></div>}
+            {view.kind === 'year' && <div className="metric water"><span><i />Landsat water, {year}</span><strong>{landsatHere?.value != null ? km(landsatHere.value) : '—'}</strong><small>{year > 2018 ? 'country totals end in 2018 · map continues to 2021' : landsatHere?.low ? 'km² · lower bound: few clear images' : 'km² permanent + seasonal'}</small></div>}
             {view.kind === 'date' && <div className="metric water"><span><i />Surface water, {last?.year ?? '—'}</span><strong>{last ? km(last.value) : '—'}</strong><small>km² · latest well-observed Landsat year</small></div>}
             <dl className="wr-facts">
               <div><dt>Since 2000–02</dt><dd>{pctText(change, 1)}</dd></div>

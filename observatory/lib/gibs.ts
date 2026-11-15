@@ -107,6 +107,8 @@ export function tileURL(view: ViewDef, day: string) {
 
 /* ---------------------------------------------------------- recolouring */
 let registered = false;
+// Keep completed recoloured tiles across views/maps; copy buffers before transfer.
+const colourCache = new Map<string, ArrayBuffer>();
 const blank = (() => { let cached: Promise<ArrayBuffer> | null = null; return () => { if (!cached) { const c = new OffscreenCanvas(256, 256); c.getContext('2d')!.clearRect(0, 0, 256, 256); cached = c.convertToBlob({ type: 'image/png' }).then(x => x.arrayBuffer()); } return cached; }; })();
 function recolour(mode: Recolour, p: Uint8ClampedArray) {
   for (let i = 0; i < p.length; i += 4) {
@@ -129,6 +131,11 @@ function recolour(mode: Recolour, p: Uint8ClampedArray) {
 export function registerRecolour() {
   if (registered) return; registered = true;
   maplibregl.addProtocol('wtile', async (params, abort) => {
+    const cached = colourCache.get(params.url);
+    if (cached) {
+      colourCache.delete(params.url); colourCache.set(params.url, cached);
+      return { data: cached.slice(0) };
+    }
     const m = params.url.match(/^wtile:\/\/(\w+)\/(.*)$/);
     if (!m) throw new Error('Bad tile URL');
     const response = await fetch(m[2], { signal: abort.signal });
@@ -136,10 +143,16 @@ export function registerRecolour() {
     const bitmap = await createImageBitmap(await response.blob());
     const canvas = new OffscreenCanvas(bitmap.width, bitmap.height), ctx = canvas.getContext('2d', { willReadFrequently: true })!;
     ctx.drawImage(bitmap, 0, 0);
-    const data = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+    bitmap.close();
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
     recolour(m[1] as Recolour, data.data);
     ctx.putImageData(data, 0, 0);
-    return { data: await (await canvas.convertToBlob({ type: 'image/png' })).arrayBuffer() };
+    const result = await (await canvas.convertToBlob({ type: 'image/png' })).arrayBuffer();
+    if (!abort.signal.aborted) {
+      colourCache.set(params.url, result);
+      if (colourCache.size > 64) colourCache.delete(colourCache.keys().next().value!);
+    }
+    return { data: result.slice(0) };
   });
 }
 
@@ -175,8 +188,17 @@ export function baseStyle(): StyleSpecification {
   };
 }
 
+const viewKeys = new WeakMap<MLMap, string>();
+
 /** Show one view at one date (or year) on a map made with baseStyle(). */
 export function showView(map: MLMap, view: ViewDef, when: string | number, opacity: number) {
+  const key = `${view.id}:${when}`;
+  if (viewKeys.get(map) === key) {
+    const ids = view.kind === 'year' ? ['landsat'] : daysFor(view, String(when)).map((_, i) => `v${i}`);
+    for (const id of ids) map.setPaintProperty(id, 'raster-opacity', opacity);
+    return;
+  }
+  viewKeys.set(map, key);
   if (view.kind === 'year') {
     (map.getSource('landsat') as maplibregl.RasterTileSource).setTiles([annualWaterTiles(Number(when))]);
     map.setLayoutProperty('landsat', 'visibility', 'visible');
@@ -219,7 +241,7 @@ export function createWorldMap(container: HTMLElement, opts: { center?: [number,
   maplibregl.setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
   return new maplibregl.Map({
     container, style: baseStyle(), center: opts.center ?? [15, 10], zoom: opts.zoom ?? 1.4, minZoom: .6, maxZoom: 14,
-    dragRotate: false, touchPitch: false, attributionControl: false, fadeDuration: 100, maxTileCacheSize: 120,
+    dragRotate: false, touchPitch: false, attributionControl: false, fadeDuration: 100, maxTileCacheSize: 80, pixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
     canvasContextAttributes: { powerPreference: 'high-performance' },
   });
 }

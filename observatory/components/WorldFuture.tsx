@@ -6,6 +6,7 @@ import { contains } from '@/lib/countryGeometry';
 import { CAUSES, DEFAULT_OPTIONS, inText, chanceBelow, fit, km, mean, pctText, prob, project, selected, series, usable, validate, type Cause, type DataMode, type EngineOptions, type Selection, type World } from '@/lib/world';
 import { sectionNumber } from '@/lib/sections';
 import PlacePicker from './PlacePicker';
+import { useMapVisibility } from '@/lib/useMapVisibility';
 
 /*
   07 · Future with our private algorithm, for any place on Earth. The reader
@@ -23,7 +24,10 @@ const SCEN: { id: Scenario; label: string; note: string }[] = [
 const YEARS = Array.from({ length: 12 }, (_, i) => 2019 + i);
 const RAMP: [number, string][] = [[0, '#1f6fb2'], [.25, '#5aa6d6'], [.5, '#d9d2b4'], [.75, '#e3924a'], [1, '#c4442a']];
 
-export default function WorldFuture({ world, selection, onSelect }: { world: World | null; selection: Selection; onSelect: (s: Selection) => void }) {
+export default function WorldFuture({ world: suppliedWorld, selection, onSelect }: { world: World | null; selection: Selection; onSelect: (s: Selection) => void }) {
+  const sectionRef = useRef<HTMLElement>(null);
+  const { started } = useMapVisibility(sectionRef);
+  const world = started ? suppliedWorld : null;
   const [opt, setOpt] = useState<EngineOptions>(DEFAULT_OPTIONS);
   const [year, setYear] = useState(2030);
   const [scenario, setScenario] = useState<Scenario>('expected');
@@ -45,7 +49,7 @@ export default function WorldFuture({ world, selection, onSelect }: { world: Wor
     + (ranked[0] && ranked[0].w > .5 ? `The engine leans most on ${ranked.filter(r => r.w > .5).map(r => `${label(r.c)} (${prob(r.w)})`).join(', ')}. ` : 'No single cause clearly wins here, so the range stays wide. ')
     + (p.known === 'known' ? 'Every cause for this year has already been measured.' : p.known === 'partly' ? 'Part of this year’s causes are measured; the rest are drawn from past years.' : 'This year’s rain and heat have not happened yet, so they are drawn from past years.');
 
-  return <section className="future-section" id="future" aria-labelledby="future-title"><div className="wrap">
+  return <section ref={sectionRef} className="future-section" id="future" aria-labelledby="future-title"><div className="wrap">
     <div className="section-heading"><div><div className="eyebrow"><span className="section-number">{sectionNumber('future')}</span> FUTURE · OUR PRIVATE ALGORITHM</div><h2 id="future-title">The planet to 2030,<br /><em>drawn by probability.</em></h2></div><p className="section-description">Choose a place and how the engine should work. It refits on the spot, and every answer, chance and map below follows your choice.</p></div>
     {!world || !place ? <div className="feed-placeholder" role="status"><span className="loading-orbit" /><h3>Loading the world record…</h3></div> : <div className="wf-layout">
       <aside className="wf-options" aria-label="Engine options">
@@ -100,12 +104,14 @@ export default function WorldFuture({ world, selection, onSelect }: { world: Wor
 function ProbabilityMap({ world, opt, year, onPick, selectedKey }: { world: World; opt: EngineOptions; year: number; onPick: (key: string) => void; selectedKey: string }) {
   const host = useRef<HTMLDivElement>(null), map = useRef<MLMap | null>(null);
   const [ready, setReady] = useState(false), [busy, setBusy] = useState(false), [summary, setSummary] = useState<{ below: number; n: number } | null>(null);
+  const { started, active } = useMapVisibility(host);
+  const lastComputed = useRef<{ opt: EngineOptions; year: number } | null>(null);
   const pick = useRef(onPick); pick.current = onPick;
   const features = useMemo(() => world.countries.filter(c => c.geometry).map(c => ({ type: 'Feature' as const, properties: { key: c.key, name: c.name, p: -1 }, geometry: c.geometry as GeoJSON.Geometry })), [world]);
   useEffect(() => {
-    if (!host.current || !document.createElement('canvas').getContext('webgl2')) return;
+    if (!started || !host.current || !document.createElement('canvas').getContext('webgl2')) return;
     maplibregl.setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
-    const m = new maplibregl.Map({ container: host.current, attributionControl: false, center: [15, 15], zoom: 1, minZoom: .5, maxZoom: 7, dragRotate: false,
+    const m = new maplibregl.Map({ pixelRatio: Math.min(window.devicePixelRatio || 1, 1.5), container: host.current, attributionControl: false, center: [15, 15], zoom: 1, minZoom: .5, maxZoom: 7, dragRotate: false,
       style: { version: 8, projection: { type: 'mercator' }, sources: { c: { type: 'geojson', data: { type: 'FeatureCollection', features } } }, layers: [
         { id: 'bg', type: 'background', paint: { 'background-color': '#0a1914' } },
         { id: 'fill', type: 'fill', source: 'c', paint: { 'fill-color': ['case', ['<', ['get', 'p'], 0], '#2a3b35', ['interpolate', ['linear'], ['get', 'p'], ...RAMP.flatMap(([v, c]) => [v, c])]], 'fill-opacity': .92 } },
@@ -119,23 +125,36 @@ function ProbabilityMap({ world, opt, year, onPick, selectedKey }: { world: Worl
     m.on('mousemove', 'fill', e => { const p = e.features?.[0]?.properties; if (!p) return; popup.setLngLat(e.lngLat).setHTML(`<b>${p.name}</b><br>${p.p < 0 ? 'not enough data' : `chance below its average: ${Math.round(p.p * 100)}%`}`).addTo(m); m.getCanvas().style.cursor = 'pointer'; });
     m.on('mouseleave', 'fill', () => { popup.remove(); m.getCanvas().style.cursor = ''; });
     return () => { m.remove(); map.current = null; };
-  }, [world, features]);
+  }, [world, features, started]);
   useEffect(() => {
-    if (!ready) return; setBusy(true);
-    const id = setTimeout(() => {
+    if (!ready || !active) return;
+    if (lastComputed.current?.opt === opt && lastComputed.current.year === year) return;
+    let cancelled = false;
+    setBusy(true);
+    const run = async () => {
       let below = 0, n = 0;
-      for (const ft of features) {
+      const computed = [];
+      for (const original of features) {
+        // Yield between countries so camera gestures and input can be handled.
+        await new Promise<void>(resolve => setTimeout(resolve, 0));
+        if (cancelled) return;
+        const ft = { ...original, properties: { ...original.properties, p: -1 } };
         const c = world.byKey.get(ft.properties.key)!, fc = fit(world, c, opt);
-        if (!fc.ok) { ft.properties.p = -1; continue; }
-        const avg = mean(usable(series(c, world.years, opt.mode)).filter(q => q.year >= opt.from).map(q => q.value));
-        const pr = project(world, c, fc, [year], 160, 11)[0];
-        ft.properties.p = chanceBelow(pr, avg); n++; if (ft.properties.p > .5) below++;
+        if (fc.ok) {
+          const avg = mean(usable(series(c, world.years, opt.mode)).filter(q => q.year >= opt.from).map(q => q.value));
+          const pr = project(world, c, fc, [year], 160, 11)[0];
+          ft.properties.p = chanceBelow(pr, avg); n++; if (ft.properties.p > .5) below++;
+        }
+        computed.push(ft);
       }
-      (map.current?.getSource('c') as maplibregl.GeoJSONSource | undefined)?.setData({ type: 'FeatureCollection', features });
+      if (cancelled) return;
+      (map.current?.getSource('c') as maplibregl.GeoJSONSource | undefined)?.setData({ type: 'FeatureCollection', features: computed });
+      lastComputed.current = { opt, year };
       setSummary({ below, n }); setBusy(false);
-    }, 30);
-    return () => clearTimeout(id);
-  }, [ready, opt, year, world, features]);
+    };
+    void run();
+    return () => { cancelled = true; };
+  }, [ready, active, opt, year, world, features]);
   useEffect(() => { if (ready) map.current?.setFilter('sel', ['==', ['get', 'key'], selectedKey]); }, [ready, selectedKey]);
   return <div className="wf-map-card">
     <div className="wf-map-head"><div><div className="eyebrow">PROBABILITY MAP · {year}</div><h3>Chance of less water than usual.</h3></div><p>{busy ? 'The engine is running for every country…' : summary ? `${summary.below} of ${summary.n} countries lean towards less water than their own average in ${year}.` : ''}</p></div>

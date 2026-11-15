@@ -1,13 +1,12 @@
 'use client';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { RidgeResearch } from '@/lib/ridgeResearch';
 import { sectionNumber } from '@/lib/sections';
 
 /*
   "What is RSynthesis AI?" — the first section under the opening screen.
   Three square cards read as a formula: DATA + AI = SYNTHESIS / ESTIMATION.
-  Activating a card opens its examples. Below, the longer story: raw data,
-  Ridge research and the interactive Bayesian projection.
+  Hover previews the examples. Clicking keeps them open.
 */
 type Card = { id: string; title: string; icon: ReactNode; lead: string; items: string[] };
 
@@ -20,7 +19,29 @@ const ICONS = {
 };
 
 export default function WhatIs({ ridge }: { ridge: RidgeResearch }) {
-  const [open, setOpen] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [pinned, setPinned] = useState<string | null>(null);
+  const pinnedCard = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hovered && !pinned) return;
+    const dismissOutside = (event: MouseEvent) => {
+      if (pinned && event.target instanceof Node && !pinnedCard.current?.contains(event.target)) {
+        setPinned(null);
+      }
+    };
+    const dismissOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setHovered(null);
+      setPinned(null);
+    };
+    document.addEventListener('click', dismissOutside, true);
+    document.addEventListener('keydown', dismissOnEscape);
+    return () => {
+      document.removeEventListener('click', dismissOutside, true);
+      document.removeEventListener('keydown', dismissOnEscape);
+    };
+  }, [hovered, pinned]);
   const cards: Card[] = [
     {
       id: 'data', title: 'Data', icon: ICONS.data, lead: 'Raw data from NASA radars and satellites',
@@ -35,7 +56,7 @@ export default function WhatIs({ ridge }: { ridge: RidgeResearch }) {
       items: ['Ridge experiment · one-year area estimates in km²', 'Bayesian map · 0–1 probability through 2030', 'Dry, typical and wet outcomes for places with enough data'],
     },
   ];
-  const toggle = (id: string) => setOpen(o => (o === id ? null : id));
+  const isOpen = (id: string) => id === hovered || id === pinned;
 
   return (
     <section className="what-section" id="what" aria-labelledby="what-title">
@@ -49,13 +70,15 @@ export default function WhatIs({ ridge }: { ridge: RidgeResearch }) {
         <div className="formula" role="list">
           {cards.map((c, i) => <div className="formula-slot" role="listitem" key={c.id}>
             {i > 0 && <span className="formula-op" aria-hidden="true">{i === 1 ? '+' : '='}</span>}
-            <div className={`formula-card card-${c.id}`} data-open={open === c.id}>
-              <button type="button" className="formula-face" aria-expanded={open === c.id} aria-controls={`card-${c.id}`}
-                onClick={() => toggle(c.id)}>
+            <div className={`formula-card card-${c.id}`} ref={pinned === c.id ? pinnedCard : undefined} data-open={isOpen(c.id)}
+              onPointerEnter={event => { if (event.pointerType === 'mouse') setHovered(c.id); }}
+              onPointerLeave={event => { if (event.pointerType === 'mouse') setHovered(id => id === c.id ? null : id); }}>
+              <button type="button" className="formula-face" aria-expanded={isOpen(c.id)} aria-controls={`card-${c.id}`}
+                onClick={() => setPinned(c.id)}>
                 <span className="formula-icon">{c.icon}</span>
                 <span className="formula-title">{c.title}</span>
               </button>
-              <div className="formula-drawer" id={`card-${c.id}`}>
+              <div className="formula-drawer" id={`card-${c.id}`} aria-hidden={!isOpen(c.id)}>
                 <div>
                   <p>{c.lead}</p>
                   <ul>{c.items.map(t => <li key={t}>{t}</li>)}</ul>
@@ -64,7 +87,7 @@ export default function WhatIs({ ridge }: { ridge: RidgeResearch }) {
             </div>
           </div>)}
         </div>
-        <p className="formula-hint">Select a card to see its examples.</p>
+        <p className="formula-hint">Hover to preview. Click or tap to keep a card open.</p>
 
         <div className="what-story">
           <article>

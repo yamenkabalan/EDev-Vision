@@ -8,6 +8,7 @@
 import * as maplibregl from 'maplibre-gl';
 import type { Map as MLMap, StyleSpecification } from 'maplibre-gl';
 import { annualWaterTiles } from './annualWater';
+import { cycleTiles, registerNisarTiles } from './nisarTiles';
 
 export type ViewId = 'nisar' | 's1water' | 'hlswater' | 'flood' | 'rain' | 'photo' | 'landsat';
 type Recolour = 'hls' | 's1' | 'flood' | 'none';
@@ -23,7 +24,7 @@ export const VIEWS: ViewDef[] = [
     what: 'NASA–ISRO NISAR L-band radar: one full 12-day orbit cycle stacked into one picture of the Earth',
     best: 'Best for seeing what radar sees through clouds, day or night',
     more: ['Each strip is one orbit pass. Twelve days of passes cover nearly all land.', 'Dark tones are smooth surfaces such as calm open water; bright tones are rough ground, forest and flooded vegetation.'],
-    tech: ['NISAR L2 GCOV browse imagery (HH/HV colour rendering by NASA), via NASA GIBS.', 'Up to 12 daily layers drawn on top of each other, newest on top.'],
+    tech: ['NISAR L2 GCOV browse imagery (HH/HV colour rendering by NASA), via NASA GIBS.', 'Up to 12 daily images combined per tile, newest on top; fully covered older pixels need no further downloads.'],
     legend: [{ label: 'Smooth / open water (dark)', color: '#16324a' }, { label: 'Vegetation, rough ground (bright)', color: '#a7c94a' }],
     source: 'NASA–ISRO NISAR · NASA GIBS', sourceUrl: 'https://nisar.jpl.nasa.gov/',
   },
@@ -172,6 +173,7 @@ export function baseStyle(): StyleSpecification {
       'earth-overview': { type: 'raster', tiles: [`${base}/data/earth-overview/{z}/{x}/{y}.webp`], tileSize: 256, maxzoom: 3 },
       dark: { type: 'raster', tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 16, attribution: 'Basemap © Esri, HERE, Garmin, OSM contributors' },
       places: { type: 'raster', tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, minzoom: 2, maxzoom: 19 },
+      ncycle: { type: 'raster', tiles: [`${base}/data/earth-overview/0/0/0.webp`], tileSize: 256, maxzoom: 13 },
       landsat: { type: 'raster', tiles: [annualWaterTiles(2021)], tileSize: 256, maxzoom: 14 },
       ...Object.fromEntries(stack.map(i => [`v${i}`, { type: 'raster', tiles: [`${base}/data/earth-overview/0/0/0.webp`], tileSize: 256, maxzoom: 9 }])),
       selected: { type: 'geojson', data: empty },
@@ -180,6 +182,7 @@ export function baseStyle(): StyleSpecification {
       { id: 'space', type: 'background', paint: { 'background-color': '#06151f' } },
       { id: 'dark', type: 'raster', source: 'dark', paint: { 'raster-brightness-max': .32, 'raster-saturation': -1, 'raster-fade-duration': 100 } },
       { id: 'earth-overview', type: 'raster', source: 'earth-overview', maxzoom: 4.5, paint: { 'raster-opacity': ['interpolate', ['linear'], ['zoom'], 0, .55, 3.5, .55, 4.5, 0], 'raster-fade-duration': 0 } },
+      { id: 'ncycle', type: 'raster', source: 'ncycle', layout: { visibility: 'none' }, paint: { 'raster-fade-duration': 80 } },
       { id: 'landsat', type: 'raster', source: 'landsat', layout: { visibility: 'none' }, paint: { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 } },
       ...stack.map(i => ({ id: `v${i}`, type: 'raster' as const, source: `v${i}`, layout: { visibility: 'none' as const }, paint: { 'raster-fade-duration': 0 } })),
       { id: 'places', type: 'raster', source: 'places', minzoom: 2, paint: { 'raster-opacity': .85, 'raster-fade-duration': 100 } },
@@ -194,11 +197,19 @@ const viewKeys = new WeakMap<MLMap, string>();
 export function showView(map: MLMap, view: ViewDef, when: string | number, opacity: number) {
   const key = `${view.id}:${when}`;
   if (viewKeys.get(map) === key) {
-    const ids = view.kind === 'year' ? ['landsat'] : daysFor(view, String(when)).map((_, i) => `v${i}`);
+    const ids = view.id === 'nisar' ? ['ncycle'] : view.kind === 'year' ? ['landsat'] : daysFor(view, String(when)).map((_, i) => `v${i}`);
     for (const id of ids) map.setPaintProperty(id, 'raster-opacity', opacity);
     return;
   }
   viewKeys.set(map, key);
+  map.setLayoutProperty('ncycle', 'visibility', view.id === 'nisar' ? 'visible' : 'none');
+  if (view.id === 'nisar') {
+    (map.getSource('ncycle') as maplibregl.RasterTileSource).setTiles([cycleTiles(daysFor(view, String(when)))]);
+    map.setPaintProperty('ncycle', 'raster-opacity', opacity);
+    map.setLayoutProperty('landsat', 'visibility', 'none');
+    for (let i = 0; i < MAX_STACK; i++) map.setLayoutProperty(`v${i}`, 'visibility', 'none');
+    return;
+  }
   if (view.kind === 'year') {
     (map.getSource('landsat') as maplibregl.RasterTileSource).setTiles([annualWaterTiles(Number(when))]);
     map.setLayoutProperty('landsat', 'visibility', 'visible');
@@ -238,6 +249,7 @@ export function setSelected(map: MLMap, geometry: GeoJSON.Geometry | null) {
 export function createWorldMap(container: HTMLElement, opts: { center?: [number, number]; zoom?: number } = {}): MLMap | null {
   if (!document.createElement('canvas').getContext('webgl2')) return null;
   registerRecolour();
+  registerNisarTiles();
   maplibregl.setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
   return new maplibregl.Map({
     container, style: baseStyle(), center: opts.center ?? [15, 10], zoom: opts.zoom ?? 1.4, minZoom: .6, maxZoom: 14,

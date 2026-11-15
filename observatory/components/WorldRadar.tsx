@@ -22,6 +22,8 @@ export default function WorldRadar({ world, selection, onSelect }: { world: Worl
   const [ready, setReady] = useState(false), [failed, setFailed] = useState(false), [loading, setLoading] = useState(false);
   const [viewId, setViewId] = useState<ViewId>('nisar'), [step, setStep] = useState(STEPS.length - 4), [year, setYear] = useState(2021), [opacity, setOpacity] = useState(.95), [playing, setPlaying] = useState(false);
   const view = VIEW[viewId], date = STEPS[step];
+  const [tileError, setTileError] = useState(false);
+  const viewRef = useRef(view); viewRef.current = view;
   const worldRef = useRef(world); worldRef.current = world;
   const selRef = useRef(selection); selRef.current = selection;
   const onSelectRef = useRef(onSelect); onSelectRef.current = onSelect;
@@ -32,8 +34,19 @@ export default function WorldRadar({ world, selection, onSelect }: { world: Worl
     if (!m) { setFailed(true); return; }
     map.current = m;
     m.on('load', () => setReady(true));
-    m.on('dataloading', e => { if ('sourceId' in e && (e.sourceId as string).match(/^v\d|landsat/)) setLoading(true); });
-    m.on('idle', () => setLoading(false));
+    const layerIds = () => viewRef.current.id === 'nisar' ? ['ncycle'] : viewRef.current.kind === 'year' ? ['landsat'] : Array.from({ length: 12 }, (_, i) => `v${i}`);
+    const updateLoading = () => {
+      const ids = layerIds().filter(id => m.getLayer(id) && m.getLayoutProperty(id, 'visibility') !== 'none');
+      setLoading(ids.some(id => m.getSource(id) && !m.isSourceLoaded(id)));
+    };
+    m.on('dataloading', updateLoading);
+    m.on('sourcedata', updateLoading);
+    m.on('sourcedataabort', updateLoading);
+    m.on('moveend', updateLoading);
+    m.on('idle', updateLoading);
+    m.on('error', e => {
+      if ('sourceId' in e && layerIds().includes(String(e.sourceId))) { setTileError(true); updateLoading(); }
+    });
     m.on('click', e => {
       const w = worldRef.current; if (!w) return;
       const hit = w.countries.find(c => c.geometry && contains(c.geometry, e.lngLat.lng, e.lngLat.lat));
@@ -44,6 +57,18 @@ export default function WorldRadar({ world, selection, onSelect }: { world: Worl
   }, [started]);
 
   useEffect(() => { if (active && ready && map.current) showView(map.current, view, view.kind === 'year' ? year : date, opacity); }, [active, ready, view, date, year, opacity]);
+
+  useEffect(() => setTileError(false), [viewId, date, year]);
+  const retryTiles = () => {
+    const m = map.current; if (!m) return;
+    setTileError(false);
+    const ids = view.id === 'nisar' ? ['ncycle'] : view.kind === 'year' ? ['landsat'] : Array.from({ length: 12 }, (_, i) => `v${i}`);
+    for (const id of ids) {
+      const source = m.getSource(id) as import('maplibre-gl').RasterTileSource | undefined;
+      const tiles = source?.serialize().tiles;
+      if (tiles) source?.setTiles(tiles);
+    }
+  };
 
   const lastFocused = useRef<string | null>(null);
   const place = world ? selected(world, selection)[0] : null;
@@ -84,7 +109,7 @@ export default function WorldRadar({ world, selection, onSelect }: { world: Worl
           <div ref={host} className="wr-map" role="region" aria-label={`${view.label} map of the Earth. Drag to rotate, scroll to zoom, click a country to select it.`} />
           {(!ready || failed) && <div className="map-skeleton wr-skeleton">{failed ? 'This device cannot draw the 3D map (WebGL2 missing).' : 'Preparing the Earth…'}</div>}
           <button className="map-play" aria-pressed={playing} onClick={() => setPlaying(p => !p)}>{playing ? 'Ⅱ Pause' : '▷ Play'}</button>
-          <div className="wr-when"><b>{view.label}</b><span>{view.kind === 'year' ? `Landsat year ${year}` : days.length > 1 ? `${fmtDate(days[0])} – ${fmtDate(days.at(-1)!, true)} · ${days.length} days stacked` : days.length ? fmtDate(days[0], true) : 'No data for this date'}{loading ? ' · loading' : ''}</span></div>
+          <div className="wr-when"><b>{view.label}</b><span>{view.kind === 'year' ? `Landsat year ${year}` : days.length > 1 ? `${fmtDate(days[0])} – ${fmtDate(days.at(-1)!, true)} · ${days.length} days stacked` : days.length ? fmtDate(days[0], true) : 'No data for this date'}{tileError ? ' · imagery failed' : loading ? ' · loading detail…' : ready ? ' · detail loaded' : ' · preparing…'}</span>{tileError && <button type="button" onClick={retryTiles}>Retry</button>}</div>
         </div>
         <aside className="observation-stats v2-stats wr-stats">
           {world ? <PlacePicker world={world} value={selection.mode === 'compare' ? { ...selection, mode: 'country' } : selection} onChange={onSelect} allowCompare={false} compact /> : <p className="stats-note">Loading the world record…</p>}
